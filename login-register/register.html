@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login</title>
+  <link rel="stylesheet" href="../styles/login-register.css">
+  <link rel="stylesheet" href="../styles/mainstyles.css">
+</head>
+<body>
+<header>
+    <div class="logo">
+        <img src="../assets/logo.png" alt="Logo">
+    </div>
+</header>
+<div class="container">
+  <div class="login-box">
+    <h2 id="form-title">Registrate</h2>
+    <form id="login-form">
+      <input type="text" id="username" placeholder="Nombre de usuario" required>
+      <input type="email" id="email" placeholder="Correo electrónico" required>
+      <br>
+      <input type="password" id="password" placeholder="Contraseña" required>
+      <br>
+      <button type="submit">Entrar</button>
+      <br>
+    </form>
+    <p id="toggle-text">¿Tenés cuenta? <a href="login.html" id="toggle-form">Logeate acá</a></p>
+    <p id="msg"></p>
+  </div>
+</div>
+<script src="../js/login-reg.js"></script>
+</body>
+</html>

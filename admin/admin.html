@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Panel de Administrador</title>
+    <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <a href="../index.html"><img src="../assets/logo.png" alt="Logo" /></a>
+        </div>
+        <h1>Gestión de Productos</h1>
+    </header>
+
+    <main>
+        <section class="accordion">
+            <details open>
+                <summary>➕ Agregar o Editar Producto</summary>
+                <div class="formulario">
+                    <input type="text" id="nombre" placeholder="Nombre del producto" />
+                    <textarea id="descripcion" placeholder="Descripción del producto"></textarea>
+
+                    <label for="tipoProducto">Tipo de producto:</label>
+                    <select id="tipoProducto">
+                        <option value="">Seleccionar tipo</option>
+                        <option value="sabana">Sábana</option>
+                        <option value="acolchado">Acolchado</option>
+                        <option value="frazada">Frazada</option>
+                        <option value="toalla">Toalla</option>
+                    </select>
+
+                    <div id="medidasContainer"></div>
+
+                    <div id="preciosPorMedidaContainer">
+                    </div>
+                    <input type="hidden" id="preciosCombinados" value="" />
+                    <fieldset>
+                        <legend>Colores disponibles:</legend>
+                        <div class="color-grid">
+                            <label><input type="checkbox" name="color" value="Negro"> Negro</label>
+                            <label><input type="checkbox" name="color" value="Blanco"> Blanco</label>
+                            <label><input type="checkbox" name="color" value="Rojo"> Rojo</label>
+                            <label><input type="checkbox" name="color" value="Azul"> Azul</label>
+                            <label><input type="checkbox" name="color" value="Beige"> Beige</label>
+                            <label><input type="checkbox" name="color" value="Celeste"> Celeste</label>
+                            <label><input type="checkbox" name="color" value="Gris"> Gris</label>
+                            <label><input type="checkbox" name="color" value="Naranja"> Naranja</label>
+                            <label><input type="checkbox" name="color" value="Verde"> Verde</label>
+                        </div>
+                    </fieldset>
+                    
+                    <div id="stockVisualContainer"></div>
+                    <input type="hidden" id="stockCombinado" />
+
+                    <div id="imagenesPorColorContainer"></div>
+
+                    <button id="agregar">Agregar Producto</button>
+                </div>
+            </details>
+        </section>
+
+        <section class="tabla-productos">
+            <h2>📦 Productos Cargados</h2>
+            <button id="exportar">Exportar Productos (TXT)</button> 
+            <table>
+                <thead>
+                    <tr>
+                        <th>Imagen</th>
+                        <th>Nombre</th>
+                        <th>Precios por Talle</th>
+                        <th>Colores</th>
+                        <th>Stock por Color y Talle</th>
+                        <th>Descripción</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-body"></tbody>
+            </table>
+        </section>
+    </main>
+    
+    <script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
+    <script type="module" src="admin.js"></script>
+</body>
+</html>

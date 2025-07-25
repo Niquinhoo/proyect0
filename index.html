@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitalo</title>
+    <link rel="stylesheet" href="../styles/mainstyles.css">
+    <link rel="stylesheet" href="../styles/paginaprincipal.css">
+</head>
+<body>
+  <header id="encabezado"> <div class="logo">
+        <a href="./index.html"><img src="./assets/logo.png" alt="Logo"></a>
+    </div>
+    <div class="search-bar">
+        <input type="text" placeholder="Buscar...">
+        <!-- <button type="submit" class="search-bar-btn" id="search-button">Buscar</button>  -->
+        <div id="search-suggestions" style="display: none;"></div> 
+    </div>
+    <a href="cart/carrito.html" class="cart-icon">🛒</a>
+    <a href="admin/admin.html" class="user-icon">👤</a>
+  </header>
+  <main>
+    <br>
+    <div class="navegacion-categorias mostrar" id="menu-categorias">
+      <a href="#" class="categoria">🏘️Habitación</a>
+      <a href="#" class="categoria">🍳Cocina</a>
+      <a href="#" class="categoria">🛀Baño</a>
+      <a href="#" class="categoria">🔥Combos</a>
+    </div>
+    <div class="contenedor-main">
+      <div class="contenedor-productos" id="contenedor-productos">
+      </div>
+    </div>
+  </main>
+</body>
+<script src="../js/publico.js"></script>
+</html>

@@ -1,0 +1,172 @@
+.detalle-container {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  margin-top: 150px;
+}
+
+.detalle-principal {
+  display: flex;
+  margin-bottom: 50px;
+  background: white;
+  max-width: 100%;
+  width: 1000px;
+  height: 500px;
+  border-radius: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin: auto;
+  padding: 20px;
+  gap: 20px;
+}
+
+h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #000000;
+  text-align: center;
+}
+
+.detalle-info {
+  max-width: 400px;
+  margin-left: 50px;
+  margin-bottom: 30px;
+  margin-top: 30px;
+  margin-right: 50px;
+}
+
+.detalle-info label {
+  display: block;
+  margin-top: 10px;
+}
+
+.detalle-info select,
+.detalle-info input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+.detalle-info button {
+  padding: 10px 20px;
+  background-color: #1d37ff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.detalle-info button:hover {
+  background-color: #00aab3;
+}
+
+.productos-relacionados {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  padding: 20px;
+}
+
+.producto-rel-card{
+  width: 200px;
+  height: 100%;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  text-align: center;
+  padding: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.producto-rel-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.producto-rel-card a{
+  text-decoration: none;
+  color: black;
+}
+
+/* Contenedor del Carrusel */
+.carrusel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: auto;
+    /* Asegúrate de que este contenedor no tenga 'overflow: hidden' si quieres que el zoom
+       pueda desbordarse ligeramente, pero si quieres que se recorte, añádelo aquí.
+       Generalmente, para carruseles, se maneja el 'overflow' en el contenedor de la imagen. */
+}
+
+/* ... (tu CSS existente) ... */
+
+/* El div que contiene la imagen principal del carrusel */
+.imagen-carrusel {
+    overflow: hidden; /* ¡Crucial para que el zoom se recorte dentro del contenedor! */
+    border-radius: 8px;
+    width: auto; /* Puedes darle un ancho fijo si lo prefieres para consistencia */
+    height: 450px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+
+.imagen-carrusel img {
+    width: auto;
+    height: 450px;
+    object-fit: cover;
+    border-radius: 8px;
+    transition: transform 0.1s linear;
+    cursor: grab; 
+}
+
+
+
+.imagen-carrusel img.zooming {
+    cursor: grabbing;
+}
+
+
+.producto,
+.producto-rel-card {
+    overflow: hidden;
+}
+
+.img-producto,
+.img-producto-rel {
+    transition: transform 0.3s ease-in-out;
+    transform-origin: center center; 
+}
+
+.img-producto:hover,
+.img-producto-rel:hover { 
+    transform: scale(1.1);
+}
+
+.btn-carrusel {
+  background-color: rgba(0, 0, 0, 0.239);
+  color: #000000;
+  border: none;
+  font-size: 1rem;
+  padding: 10px;
+  border-radius: 20%;
+  cursor: pointer; 
+}
+
+.btn-carrusel:hover {
+  background-color: rgba(0,0,0,0.8);
+}
+
+.descripcion {
+  width: 300px;          
+  height: auto;          
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  overflow-y: auto;      
+}
