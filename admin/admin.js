@@ -765,3 +765,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderMedidasInfo(); // Asegura que los campos de medida/precio se muestren al cargar
     actualizarInputsImagenesPorColor(); // Muestra los inputs de imagen para los colores preseleccionados
 });
+// En admin.js, al final del archivo o después de las definiciones de las funciones
+window.editarProductoFirestore = editarProductoFirestore; // Asume que la función se llama así
+window.eliminarProducto = eliminarProducto; // Asume que la función se llama así
