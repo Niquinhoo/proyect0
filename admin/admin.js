@@ -1,8 +1,9 @@
 // admin.js
 
-// 1. Importa las funciones necesarias de Firebase SDKs
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
+// 1. Importa las funciones necesarias de Firebase SDKs usando las URLs CDN
+//    Asegúrate de que la versión (por ejemplo, 10.12.2) coincida con la que deseas usar.
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // 2. Tu configuración de la aplicación Firebase
 const firebaseConfig = {
