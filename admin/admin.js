@@ -45,10 +45,10 @@ const preciosCombinadosInput = document.getElementById('preciosCombinados');
 let editandoProductoId = null; // Almacena el ID de Firestore del producto que se está editando
 
 const tallesPorTipo = {
-    sabana: ["1 plaza", "2 plazas", "queen", "king"],
-    acolchado: ["1 plaza", "2 plazas", "queen", "king"],
-    frazada: ["1 plaza", "2 plazas", "queen", "king"],
-    toalla: ["300g", "400g", "500g", "600g"]
+    sabana: ["1 plaza", "2 plazas", "Queen", "King"],
+    acolchado: ["1 plaza", "2 plazas", "Queen", "King"],
+    frazada: ["1 plaza", "2 plazas", "Queen", "King"],
+    toalla: ["400g", "500g"],
 };
 
 
