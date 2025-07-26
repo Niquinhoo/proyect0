@@ -1,20 +1,40 @@
-// publico.js (Modificado para incluir sugerencias de búsqueda y corregir scroll)
+// publico.js (Modificado para Firebase Firestore y mantener funcionalidades existentes)
 
-document.addEventListener("DOMContentLoaded", () => {
+// 1. Importa las funciones necesarias de Firebase SDKs usando las URLs CDN completas.
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// 2. Tu configuración de la aplicación Firebase (¡Asegúrate de que sea la misma que en admin.js y producto.js!)
+const firebaseConfig = {
+    apiKey: "AIzaSyCvPAEuNQVNnIUbSk0ggegsUps9DW6MS8", // Tu API Key
+    authDomain: "calm-todo-blanco.firebaseapp.com",
+    projectId: "calm-todo-blanco",
+    storageBucket: "calm-todo-blanco.appspot.com",
+    messagingSenderId: "115599611256",
+    appId: "1:115599611256:web:fcde0c84c53ced5128e4d",
+    measurementId: "G-2E6EF3K5TL"
+};
+
+// 3. Inicializar Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const productosCollection = collection(db, 'productos'); // Referencia a la colección 'productos'
+
+// Función global para obtener la imagen de placeholder
+const getPlaceholderImage = () => './assets/placeholder.png'; // <-- ¡AJUSTA ESTA RUTA!
+
+document.addEventListener("DOMContentLoaded", async () => { // Usamos 'async' porque vamos a usar 'await'
     const contenedorProductos = document.getElementById("contenedor-productos");
-    const productos = JSON.parse(localStorage.getItem("productos")) || [];
+    let productos = []; // La lista de productos se cargará de Firestore
 
     // --- Referencias a los elementos de la barra de búsqueda y el nuevo contenedor de sugerencias ---
     const searchInput = document.querySelector('header .search-bar input[type="text"]');
-    // ¡CORREGIDO! Selector actualizado para el botón de búsqueda
     const searchButton = document.getElementById('search-button'); 
-    
-    // Contenedor para las sugerencias de búsqueda
     const suggestionsContainer = document.getElementById('search-suggestions'); 
 
     // --- Referencias para el efecto de scroll ---
-    const header = document.getElementById("encabezado"); // ¡CORREGIDO! Ahora buscará el ID en el header
-    const menuCategorias = document.getElementById("menu-categorias"); // Asegúrate de que este ID exista en tu HTML
+    const header = document.getElementById("encabezado");
+    const menuCategorias = document.getElementById("menu-categorias");
 
     // Validaciones para asegurar que los elementos existen
     if (!contenedorProductos) {
@@ -23,9 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (!searchInput) {
         console.error("No se encontró el input de búsqueda.");
-        return;
     }
-    // Es un warning porque la funcionalidad principal no depende de él, pero es bueno saberlo.
     if (!searchButton) {
         console.warn("Botón de búsqueda no encontrado. Asegúrate de que el selector '#search-button' es correcto.");
     }
@@ -33,20 +51,12 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("No se encontró el contenedor de sugerencias con ID 'search-suggestions'.");
         return;
     }
-    if (!header) { // ¡NUEVO! Validación para el header
+    if (!header) {
         console.error("No se encontró el header con ID 'encabezado'. El efecto de scroll no funcionará.");
     }
-    if (!menuCategorias) { // ¡NUEVO! Validación para el menú de categorías
+    if (!menuCategorias) {
         console.error("No se encontró el menú de categorías con ID 'menu-categorias'. El efecto de scroll no funcionará.");
     }
-
-    if (!Array.isArray(productos) || productos.length === 0) {
-        contenedorProductos.innerHTML = "<p>No hay productos disponibles.</p>";
-        return;
-    }
-
-    // --- Función para obtener la imagen de placeholder ---
-    const getPlaceholderImage = () => './assets/placeholder.png'; // <-- ¡AJUSTA ESTA RUTA!
 
     // --- Función para determinar el precio a mostrar en la tarjeta (EXISTENTE) ---
     function getDisplayPrice(producto) {
@@ -64,13 +74,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const tallesPrioritarios = tallesOrdenados[producto.tipo];
 
         if (tallesPrioritarios && tallesPrioritarios.length > 0) {
-            if (producto.tipo === 'toalla' && producto.preciosPorMedida['500g']) {
+            if (producto.tipo === 'toalla' && producto.preciosPorMedida?.['500g']) {
                 return `$${producto.preciosPorMedida['500g'].toFixed(2)}`;
             }
 
             if (tallesPrioritarios.length >= 2) {
                 const segundoTallePrioritario = tallesPrioritarios[1];
-                if (producto.preciosPorMedida[segundoTallePrioritario]) {
+                if (producto.preciosPorMedida?.[segundoTallePrioritario]) {
                     return `$${producto.preciosPorMedida[segundoTallePrioritario].toFixed(2)}`;
                 }
             }
@@ -99,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return "Precio no definido";
     }
 
-    // --- Renderizar todos los productos inicialmente (EXISTENTE) ---
+    // --- Renderizar productos (EXISTENTE) ---
     function renderizarProductos(productosARenderizar) {
         contenedorProductos.innerHTML = "";
         if (productosARenderizar.length === 0) {
@@ -136,9 +146,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const precioMostrado = getDisplayPrice(producto);
 
             // Ajuste en la ruta del enlace para que funcione desde index.html a producto.html
-            // Si index.html está en la raíz y producto.html en ../productos, la ruta relativa sería '../productos/producto.html'
             card.innerHTML = `
-                <a href="../productos/producto.html?id=${encodeURIComponent(producto.id)}" class="producto-link">
+                <a href="./productos/producto.html?id=${encodeURIComponent(producto.id)}" class="producto-link">
                     <img src="${imagenPrincipal}"
                          data-front="${imagenPrincipal}"
                          data-back="${imagenSecundaria}"
@@ -167,6 +176,25 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // --- Cargar productos de Firebase al inicio ---
+    try {
+        const snapshot = await getDocs(productosCollection);
+        productos = []; // Limpia el array antes de llenarlo
+        snapshot.forEach(doc => {
+            productos.push({ id: doc.id, ...doc.data() });
+        });
+        
+        if (productos.length === 0) {
+            contenedorProductos.innerHTML = "<p>No hay productos disponibles en la base de datos.</p>";
+        } else {
+            renderizarProductos(productos); // Renderiza los productos cargados
+        }
+    } catch (error) {
+        console.error("Error al cargar productos de Firestore:", error);
+        contenedorProductos.innerHTML = `<p>Error al cargar los productos: ${error.message}</p>`;
+    }
+
+
     // --- FUNCIONES PARA LAS SUGERENCIAS ---
     function mostrarSugerencias(suggestedProducts) {
         suggestionsContainer.innerHTML = '';
@@ -183,8 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
             li.textContent = product.nombre;
             li.dataset.productId = product.id;
             li.addEventListener('click', () => {
-                // Ajuste en la ruta del enlace para que funcione desde index.html a producto.html
-                window.location.href = `../productos/producto.html?id=${encodeURIComponent(product.id)}`;
+                window.location.href = `./productos/producto.html?id=${encodeURIComponent(product.id)}`;
                 limpiarSugerencias();
             });
             ul.appendChild(li);
@@ -202,7 +229,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const searchTerm = searchInput.value.trim().toLowerCase();
         
         if (searchTerm.length === 0) {
-            renderizarProductos(productos); 
+            renderizarProductos(productos); // Si la búsqueda está vacía, renderiza todos los productos
             limpiarSugerencias();
             return;
         }
@@ -227,8 +254,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         if (productoEncontrado) {
-            // Ajuste en la ruta del enlace para que funcione desde index.html a producto.html
-            window.location.href = `../productos/producto.html?id=${encodeURIComponent(productoEncontrado.id)}`;
+            window.location.href = `./productos/producto.html?id=${encodeURIComponent(productoEncontrado.id)}`;
             limpiarSugerencias();
         } else {
             const productosFiltrados = productos.filter(producto =>
@@ -237,7 +263,7 @@ document.addEventListener("DOMContentLoaded", () => {
             renderizarProductos(productosFiltrados);
             limpiarSugerencias();
             if (productosFiltrados.length === 0) {
-                 alert(`No se encontraron productos con el nombre "${searchTerm}".`);
+                alert(`No se encontraron productos con el nombre "${searchTerm}".`);
             }
         }
     }
@@ -271,35 +297,29 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // --- Inicialización ---
-    renderizarProductos(productos);
-
     // Código de scroll (corregido)
     let ultimaPosicionScroll = window.scrollY;
     
     window.addEventListener("scroll", () => {
         const posicionActual = window.scrollY;
 
-        // Asegurarse de que 'header' y 'menuCategorias' existen antes de intentar manipular sus clases
-        if (header && menuCategorias) { // ¡NUEVO! Comprobación de existencia de ambos elementos
+        if (header && menuCategorias) {
             if (posicionActual > ultimaPosicionScroll) {
-                // Scroll hacia abajo
                 header.classList.add("ocultar-header");
-                menuCategorias.classList.remove("mostrar"); // Remover la clase "mostrar" si la tenías por defecto
-                menuCategorias.classList.add("ocultar"); // Añadir la clase "ocultar"
+                menuCategorias.classList.remove("mostrar");
+                menuCategorias.classList.add("ocultar");
             } else {
-                // Scroll hacia arriba
                 header.classList.remove("ocultar-header");
-                menuCategorias.classList.remove("ocultar"); // Remover la clase "ocultar"
-                menuCategorias.classList.add("mostrar"); // Añadir la clase "mostrar"
+                menuCategorias.classList.remove("ocultar");
+                menuCategorias.classList.add("mostrar");
             }
-        } else if (header) { // Si solo existe el header
+        } else if (header) {
              if (posicionActual > ultimaPosicionScroll) {
                 header.classList.add("ocultar-header");
             } else {
                 header.classList.remove("ocultar-header");
             }
-        } else if (menuCategorias) { // Si solo existe el menú de categorías
+        } else if (menuCategorias) {
             if (posicionActual > ultimaPosicionScroll) {
                 menuCategorias.classList.remove("mostrar");
                 menuCategorias.classList.add("ocultar");

@@ -1,19 +1,56 @@
-// producto.js (Versión Modificada)
+// producto.js (Versión Modificada para Firebase Firestore)
 
-// Asegúrate de que la función 'agregarAlCarrito' de este script
-// sea la que se usa para el botón en la página de detalle del producto.
-// Las funciones 'renderizarCarrito', 'actualizarContadorCarrito', etc.,
-// definidas en carrito.js, no necesitan estar aquí, solo la llamada.
+// 1. Importa las funciones necesarias de Firebase SDKs usando las URLs CDN completas.
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"; // Se añade 'getDocs' para productos recomendados
 
-document.addEventListener("DOMContentLoaded", () => {
+// 2. Tu configuración de la aplicación Firebase (¡Asegúrate de que sea la misma que en admin.js y carrito.js!)
+const firebaseConfig = {
+    apiKey: "AIzaSyCvPAEuNQVNnIUbSk0ggegsUps9DW6MS8", // Tu API Key
+    authDomain: "calm-todo-blanco.firebaseapp.com",
+    projectId: "calm-todo-blanco",
+    storageBucket: "calm-todo-blanco.appspot.com",
+    messagingSenderId: "115599611256",
+    appId: "1:115599611256:web:fcde0c84c53ced5128e4d",
+    measurementId: "G-2E6EF3K5TL"
+};
+
+// 3. Inicializar Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const productosCollection = collection(db, 'productos'); // Referencia a la colección 'productos'
+
+// Función global para obtener la imagen de placeholder
+// Asegúrate de que esta ruta sea correcta desde la ubicación de tu archivo HTML
+// Por ejemplo, si producto.html está en 'pages' y 'assets' en la raíz, entonces '../assets/placeholder.png' es correcto.
+function getPlaceholderImage() {
+    return '../assets/placeholder.png'; // <-- ¡VERIFICA Y AJUSTA ESTA RUTA SEGÚN LA ESTRUCTURA DE TU PROYECTO!
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
     const params = new URLSearchParams(window.location.search);
-    const id = parseInt(params.get("id"));
+    // Asumimos que el 'id' que pasas en la URL es el ID del documento en Firestore
+    const idProductoFirestore = params.get("id"); // Usamos el ID de Firestore directamente como string
 
-    const productos = JSON.parse(localStorage.getItem("productos")) || [];
-    const producto = productos.find(p => p.id === id);
+    if (!idProductoFirestore) {
+        document.getElementById("detalle-producto").innerHTML = "<p>ID de producto no proporcionado en la URL.</p>";
+        return;
+    }
 
-    if (!producto) {
-        document.getElementById("detalle-producto").innerHTML = "<p>Producto no encontrado</p>";
+    let producto = null;
+    try {
+        const docRef = doc(db, 'productos', idProductoFirestore);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            producto = { id: docSnap.id, ...docSnap.data() };
+        } else {
+            document.getElementById("detalle-producto").innerHTML = "<p>Producto no encontrado en la base de datos.</p>";
+            return;
+        }
+    } catch (error) {
+        console.error("Error al obtener el producto de Firestore:", error);
+        document.getElementById("detalle-producto").innerHTML = `<p>Error al cargar el producto: ${error.message}</p>`;
         return;
     }
 
@@ -23,7 +60,8 @@ document.addEventListener("DOMContentLoaded", () => {
         <div id="carrusel" class="carrusel"></div>
         <div class="detalle-info">
             <h1>${producto.nombre}</h1>
-            <p class="precio" id="precio-display"></p> <p class="descripcion">${producto.descripcion}</p>
+            <p class="precio" id="precio-display"></p>
+            <p class="descripcion">${producto.descripcion}</p>
 
             <label for="color">Color:</label>
             <select id="color"></select>
@@ -48,19 +86,31 @@ document.addEventListener("DOMContentLoaded", () => {
     const agregarAlCarritoBtn = document.getElementById("agregar-al-carrito-btn");
 
     // --- Generar Opciones de Colores ---
-    if (producto.colores && producto.colores.length > 0) {
-        const colorOptionsHTML = producto.colores
+    // Si 'colores' es un array en Firestore, úsalo. Si no, genera a partir de stockColoresMedidas
+    let coloresDisponibles = [];
+    if (Array.isArray(producto.colores) && producto.colores.length > 0) {
+        coloresDisponibles = producto.colores;
+    } else if (producto.stockColoresMedidas) {
+        // Si no hay array de colores, inferir de stockColoresMedidas (claves como "Color-Medida")
+        const coloresSet = new Set();
+        for (const clave in producto.stockColoresMedidas) {
+            if (producto.stockColoresMedidas.hasOwnProperty(clave)) {
+                const [colorKey] = clave.split('-');
+                coloresSet.add(colorKey);
+            }
+        }
+        coloresDisponibles = Array.from(coloresSet);
+    }
+    
+    if (coloresDisponibles.length > 0) {
+        const colorOptionsHTML = coloresDisponibles
             .map(color => `<option value="${color}">${color}</option>`)
             .join("");
         colorSelect.innerHTML = colorOptionsHTML;
     } else {
+        // Si no hay colores, oculta los selectores de color
         document.querySelector('label[for="color"]').style.display = 'none';
         colorSelect.style.display = 'none';
-    }
-
-    // --- Función para obtener la imagen de placeholder ---
-    function getPlaceholderImage() {
-        return '../assets/placeholder.png'; // <-- ¡AJUSTA ESTA RUTA SI ES NECESARIO!
     }
 
     // --- Función para actualizar las opciones de Medida y el Stock, y AHORA EL PRECIO ---
@@ -81,7 +131,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const tallesArray = Array.from(tallesDisponiblesParaColor);
 
-        if (!hayStockEnAlgunaMedida) {
+        if (!hayStockEnAlgunaMedida || tallesArray.length === 0) {
             medidaSelect.innerHTML = '<option value="">No hay medidas disponibles</option>';
             medidaSelect.disabled = true;
             cantidadInput.disabled = true;
@@ -99,10 +149,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const medidaOptionsHTML = tallesArray.map(medida => `<option value="${medida}">${medida}</option>`).join("");
         medidaSelect.innerHTML = medidaOptionsHTML;
 
+        // Seleccionar la primera medida disponible por defecto
         if (tallesArray.length > 0) {
             medidaSelect.value = tallesArray[0];
-        } else {
-            medidaSelect.innerHTML = '<option value="">No hay medidas disponibles</option>';
         }
 
         actualizarCantidadMaxima();
@@ -177,9 +226,10 @@ document.addEventListener("DOMContentLoaded", () => {
     cantidadInput.addEventListener("input", actualizarCantidadMaxima);
 
     // Inicializar la interfaz al cargar la página
-    if (producto.colores && producto.colores.length > 0) {
-        colorSelect.value = producto.colores[0];
+    if (coloresDisponibles.length > 0) {
+        colorSelect.value = coloresDisponibles[0];
     } else {
+        // Si no hay colores, intentar inicializar medidas con todas las disponibles si aplica
         const allMedidas = new Set();
         for (const clave in producto.stockColoresMedidas) {
             if (producto.stockColoresMedidas.hasOwnProperty(clave)) {
@@ -192,81 +242,109 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     actualizarMedidasYStock(); // Inicia la cascada de actualizaciones
 
-    // --- Productos Recomendados (código existente) ---
+    // --- Productos Recomendados ---
     const contenedorRecomendados = document.getElementById("recomendados");
 
     if (contenedorRecomendados) {
-        const recomendados = productos.filter(p =>
-            p.id !== producto.id &&
-            p.tipo === producto.tipo &&
-            Object.keys(p.imagenesPorColor || {}).some(color =>
-                Array.isArray(p.imagenesPorColor[color]) && p.imagenesPorColor[color].length > 0
-            ) &&
-            Object.values(p.preciosPorMedida || {}).length > 0
-        ).slice(0, 3);
-
-        if (recomendados.length > 0) {
-            // contenedorRecomendados.innerHTML = '<h2>Productos Relacionados</h2>';
-
-            const divTarjetasRelacionadas = document.createElement("div");
-            divTarjetasRelacionadas.classList.add("productos-relacionados");
-
-            recomendados.forEach(p => {
-                const card = document.createElement("div");
-                card.classList.add("producto-rel-card");
-
-                let primeraImagenRecomendado = getPlaceholderImage();
-                if (p.imagenesPorColor) {
-                    const coloresConImgs = Object.keys(p.imagenesPorColor).filter(c => Array.isArray(p.imagenesPorColor[c]) && p.imagenesPorColor[c].length > 0);
-                    if (coloresConImgs.length > 0) {
-                        primeraImagenRecomendado = p.imagenesPorColor[coloresConImgs[0]][0];
-                    }
-                }
-
-                let precioRecomendadoHTML = '';
-                const preciosExistentesRecomendado = Object.values(p.preciosPorMedida || {});
-                if (preciosExistentesRecomendado.length > 0) {
-                    const minPrecioRecomendado = Math.min(...preciosExistentesRecomendado);
-                    precioRecomendadoHTML = `$${minPrecioRecomendado.toFixed(2)}`;
-                    if (preciosExistentesRecomendado.length > 1) {
-                        precioRecomendadoHTML = `Desde $${minPrecioRecomendado.toFixed(2)}`;
-                    }
-                } else {
-                    precioRecomendadoHTML = `Precio N/A`;
-                }
-
-                card.innerHTML = `
-                    <a href="producto.html?id=${p.id}">
-                        <img src="${primeraImagenRecomendado}" alt="${p.nombre}" class="img-producto-rel">
-                        <h4>${p.nombre}</h4>
-                        <p>${precioRecomendadoHTML}</p> </a>
-                `;
-                divTarjetasRelacionadas.appendChild(card);
+        // Necesitamos cargar TODOS los productos para buscar recomendados
+        try {
+            const snapshotRecomendados = await getDocs(productosCollection);
+            const todosProductos = [];
+            snapshotRecomendados.forEach(doc => {
+                todosProductos.push({ id: doc.id, ...doc.data() });
             });
-            contenedorRecomendados.appendChild(divTarjetasRelacionadas);
-        } else {
-            contenedorRecomendados.innerHTML = "<p>No hay productos relacionados disponibles en esta categoría.</p>";
+
+            const recomendados = todosProductos.filter(p =>
+                p.id !== producto.id &&
+                p.tipo === producto.tipo &&
+                Object.keys(p.imagenesPorColor || {}).some(color =>
+                    Array.isArray(p.imagenesPorColor[color]) && p.imagenesPorColor[color].length > 0
+                ) &&
+                Object.values(p.preciosPorMedida || {}).length > 0
+            ).slice(0, 3); // Limitar a 3 productos recomendados
+
+            if (recomendados.length > 0) {
+                const divTarjetasRelacionadas = document.createElement("div");
+                divTarjetasRelacionadas.classList.add("productos-relacionados");
+
+                recomendados.forEach(p => {
+                    const card = document.createElement("div");
+                    card.classList.add("producto-rel-card");
+
+                    let primeraImagenRecomendado = getPlaceholderImage();
+                    if (p.imagenesPorColor) {
+                        const coloresConImgs = Object.keys(p.imagenesPorColor).filter(c => Array.isArray(p.imagenesPorColor[c]) && p.imagenesPorColor[c].length > 0);
+                        if (coloresConImgs.length > 0) {
+                            primeraImagenRecomendado = p.imagenesPorColor[coloresConImgs[0]][0];
+                        }
+                    }
+
+                    let precioRecomendadoHTML = '';
+                    const preciosExistentesRecomendado = Object.values(p.preciosPorMedida || {});
+                    if (preciosExistentesRecomendado.length > 0) {
+                        const minPrecioRecomendado = Math.min(...preciosExistentesRecomendado);
+                        precioRecomendadoHTML = `$${minPrecioRecomendado.toFixed(2)}`;
+                        if (preciosExistentesRecomendado.length > 1) {
+                            precioRecomendadoHTML = `Desde $${minPrecioRecomendado.toFixed(2)}`;
+                        }
+                    } else {
+                        precioRecomendadoHTML = `Precio N/A`;
+                    }
+
+                    card.innerHTML = `
+                        <a href="producto.html?id=${p.id}">
+                            <img src="${primeraImagenRecomendado}" alt="${p.nombre}" class="img-producto-rel">
+                            <h4>${p.nombre}</h4>
+                            <p>${precioRecomendadoHTML}</p>
+                        </a>
+                    `;
+                    divTarjetasRelacionadas.appendChild(card);
+                });
+                contenedorRecomendados.appendChild(divTarjetasRelacionadas);
+            } else {
+                contenedorRecomendados.innerHTML = "<p>No hay productos relacionados disponibles en esta categoría.</p>";
+            }
+        } catch (error) {
+            console.error("Error al cargar productos recomendados de Firestore:", error);
+            contenedorRecomendados.innerHTML = `<p>Error al cargar productos relacionados: ${error.message}</p>`;
         }
     }
 
     // --- Listener para el botón "Agregar al Carrito" ---
-    // Este listener debe estar DENTRO del DOMContentLoaded para asegurar que el botón existe
+    // Este listener llama a la función local 'agregarAlCarrito' (definida abajo)
     agregarAlCarritoBtn.addEventListener("click", () => {
-        // Llama a la función global 'agregarAlCarrito'
-        // Asegúrate de que esta función se defina globalmente (fuera del DOMContentLoaded)
-        // o que 'carrito.js' se cargue antes de este script y defina 'agregarAlCarrito'.
-        // Ya tienes una definición global para 'agregarAlCarrito' en este mismo archivo, ¡perfecto!
-        agregarAlCarrito(producto.id);
+        // Asegúrate de que 'producto' esté disponible y tenga un 'id' antes de llamar
+        if (producto && producto.id) {
+            agregarAlCarrito(producto.id);
+        } else {
+            console.error("Error: Producto no cargado o ID no disponible para agregar al carrito.");
+            alert("No se puede agregar el producto al carrito. Por favor, recarga la página.");
+        }
     });
 });
 
-// --- Función para Agregar al Carrito (GLOBAL) ---
-// Esta función ahora se alinea mejor con la estructura de carrito.js
-function agregarAlCarrito(idProducto) {
-    const productos = JSON.parse(localStorage.getItem("productos")) || [];
-    const producto = productos.find(p => p.id === idProducto);
-    if (!producto) {
-        console.error("Producto no encontrado para agregar al carrito.");
+// --- Función para Agregar al Carrito (GLOBAL para la página producto.html) ---
+// Esta función es la que se llama desde el botón "Agregar al carrito" en producto.html.
+// Su propósito es recopilar los datos del formulario de la página y luego
+// llamar a la función `window.agregarAlCarrito` que proviene de `carrito.js`.
+async function agregarAlCarrito(idProductoFirestore) { 
+    // Obtener el producto directamente de Firestore para asegurar la información más reciente
+    // Esto es un doble chequeo de stock y precio, ya que `carrito.js` también lo hará,
+    // pero asegura que la UI del producto refleje el estado actual antes de enviar al carrito.
+    let productoActualizado = null;
+    try {
+        const docRef = doc(db, 'productos', idProductoFirestore);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            productoActualizado = { id: docSnap.id, ...docSnap.data() };
+        } else {
+            console.error("Producto no encontrado en Firestore para agregar al carrito.");
+            alert("El producto no está disponible o ha sido eliminado.");
+            return;
+        }
+    } catch (error) {
+        console.error("Error al obtener producto de Firestore para el carrito:", error);
+        alert("Hubo un problema al verificar la disponibilidad del producto. Intenta de nuevo.");
         return;
     }
 
@@ -276,9 +354,9 @@ function agregarAlCarrito(idProducto) {
 
     const cantidad = parseInt(cantidadInput.value);
     const color = colorSelect.value;
-    const medida = medidaSelect.value; // Ya viene del select, no necesitamos el ?.value || ""
+    const medida = medidaSelect.value;
 
-    // Validaciones
+    // Validaciones (mantenerlas aquí)
     if (cantidad <= 0 || isNaN(cantidad)) {
         alert("Por favor, ingresa una cantidad válida (mayor a cero) para agregar al carrito.");
         return;
@@ -292,72 +370,38 @@ function agregarAlCarrito(idProducto) {
         return;
     }
 
-    // Obtener el precio del talle/medida seleccionado
-    const precioUnitario = producto.preciosPorMedida?.[medida];
+    const precioUnitario = productoActualizado.preciosPorMedida?.[medida];
 
     if (precioUnitario === undefined || precioUnitario <= 0) {
         alert("No se pudo determinar el precio para la medida seleccionada. Por favor, elige una medida válida.");
         return;
     }
 
-    // Validar stock usando el max del input (que ya se actualiza dinámicamente)
-    const stockActual = parseInt(cantidadInput.max);
-    if (cantidad > stockActual) {
-        alert(`No hay suficiente stock. Solo quedan ${stockActual} unidades.`);
-        return;
-    }
-
-    let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-
-    // Estructura del ítem en el carrito para consistencia con carrito.js
-    const itemExistenteIndex = carrito.findIndex(item =>
-        item.idProducto === idProducto && item.color === color && item.medida === medida
-    );
-
-    const imagenParaCarrito = producto.imagenesPorColor?.[color]?.[0] || getPlaceholderImage();
-
-    if (itemExistenteIndex !== -1) {
-        // Si el ítem ya existe, incrementa la cantidad
-        carrito[itemExistenteIndex].cantidad += cantidad;
+    // Llamar a la función `agregarAlCarrito` del módulo `carrito.js` (ahora expuesta a `window`)
+    // ¡Es crucial que `carrito.js` se cargue ANTES que `producto.js` en tu HTML!
+    if (typeof window.agregarAlCarrito === 'function') {
+        await window.agregarAlCarrito(
+            productoActualizado.id,
+            color,
+            medida,
+            cantidad,
+            precioUnitario,
+            productoActualizado.nombre,
+            productoActualizado.imagenesPorColor?.[color]?.[0] || getPlaceholderImage()
+        );
     } else {
-        // Si no existe, agrega el nuevo ítem
-        carrito.push({
-            idProducto: idProducto, // Renombrado a idProducto para consistencia con carrito.js
-            nombre: producto.nombre,
-            color: color,
-            medida: medida,
-            precioUnitario: precioUnitario, // Renombrado a precioUnitario para consistencia con carrito.js
-            cantidad: cantidad,
-            imagen: imagenParaCarrito
-        });
-    }
-
-    localStorage.setItem("carrito", JSON.stringify(carrito));
-    alert(`"${producto.nombre}" agregado al carrito (Cantidad: ${cantidad}, Color: ${color}, Medida: ${medida})`);
-
-    // Opcional: Si tienes una función global en carrito.js para actualizar el contador del carrito en el header,
-    // puedes llamarla aquí. Asegúrate de que carrito.js se cargue antes que producto.js.
-    if (typeof actualizarContadorCarrito === 'function') {
-        actualizarContadorCarrito();
+        console.error("La función global 'agregarAlCarrito' (de carrito.js) no está definida. Asegúrate de que carrito.js se cargue correctamente y exponga sus funciones a 'window'.");
+        alert("Hubo un error al intentar agregar al carrito. Por favor, recarga la página.");
     }
 }
 
-// --- Función del Carrusel (Global) ---
-// Mantengo esta función global ya que es útil y ya la tenías así.
+// --- Función del Carrusel (Global para la página producto.html) ---
+// Esta función gestiona la visualización del carrusel de imágenes del producto.
 function crearCarrusel(imagenes, contenedorId) {
     const contenedor = document.getElementById(contenedorId);
     if (!contenedor) {
         console.error(`ERROR: Contenedor de carrusel con ID "${contenedorId}" no encontrado.`);
         return;
-    }
-
-    // Asegúrate de que getPlaceholderImage esté disponible en este scope si no es global
-    // Ya la definimos localmente en DOMContentLoaded, y globalmente en agregarAlCarrito,
-    // pero si esta función es realmente global, debe poder acceder a ella.
-    // La mejor forma es que getPlaceholderImage sea una función global si se usa globalmente.
-    // Vamos a asegurar que sea global:
-    if (typeof window.getPlaceholderImage === 'undefined') {
-        window.getPlaceholderImage = () => '../assets/placeholder.png'; // Fallback global
     }
 
     const imagenesAMostrar = (imagenes && imagenes.length > 0) ? imagenes : [getPlaceholderImage()];

@@ -5,15 +5,15 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// 2. Tu configuración de la aplicación Firebase
+// Firebase Configuracion
 const firebaseConfig = {
-    apiKey: "AIzaSyCvPAEuNQVNnIUbSk0ggegsUps9DW6MS8", // Tu API Key
+    apiKey: "AIzaSyCvPAEuNQVNnIUbSk0ggegsUps9DW6MS8", 
     authDomain: "calm-todo-blanco.firebaseapp.com",
     projectId: "calm-todo-blanco",
-    storageBucket: "calm-todo-blanco.appspot.com", // Verifica esto en tu consola de Firebase
+    storageBucket: "calm-todo-blanco.appspot.com",
     messagingSenderId: "115599611256",
     appId: "1:115599611256:web:fcde0c84c53ced5128e4d",
-    measurementId: "G-2E6EF3K5TL" // Si usas Analytics, de lo contrario puedes omitir
+    measurementId: "G-2E6EF3K5TL"
 };
 
 // 3. Inicializa Firebase
