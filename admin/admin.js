@@ -680,7 +680,7 @@ function renderTabla() {
 /**
  * Carga los datos de un producto de Firestore en el formulario para su edición.
  * @param {string} id - El ID de Firestore del producto a editar.
-*/
+ */
 async function editarProductoFirestore(id) { // Renombramos para evitar conflicto con la función de eliminar.
     const producto = productos.find(p => p.id === id); // Busca en el array global ya cargado
     if (!producto) {
@@ -727,7 +727,6 @@ async function editarProductoFirestore(id) { // Renombramos para evitar conflict
 
 if (exportarBtn) {
     exportarBtn.addEventListener("click", () => {
-        // Ahora exportamos el array 'productos' global que ya está sincronizado con Firestore
         let contenido = productos.map(p => { 
             const stockInfo = Object.entries(p.stockColoresMedidas || {})
                 .map(([clave, stock]) => `${clave}: ${stock}`).join(", ");
@@ -735,16 +734,23 @@ if (exportarBtn) {
                 .map(([color, imgs]) => `${color} (${imgs.length} imágenes): ${imgs.join(', ')}`) // Incluye las URLs
                 .join(";\n");
             const preciosInfo = Object.entries(p.preciosPorMedida || {})
-                .map(([medida, precio]) => `${medida}: $${precio.toFixed(2)}`).join(", ");
+                .map(([medida, precio]) => `${medida}: $${precio.toFixed(2)}`).join(", "); 
 
-            return `ID: ${p.id}\nNombre: ${p.nombre}\nPrecios por Medida: ${preciosInfo}\nDescripción: ${p.descripcion}\nTipo: ${p.tipo}\nColores: ${p.colores?.join(", ")}\nStock (Color-Talle): ${stockInfo}\nImágenes por Color:\n${imagenesInfo}\n\n`;
-        }).join("\n---------------------\n\n");
+            return `Nombre: ${p.nombre}\n` +
+                   `Tipo: ${p.tipo}\n` +
+                   `Descripción: ${p.descripcion}\n` +
+                   `Precios por Medida: ${preciosInfo}\n` +
+                   `Colores: ${p.colores.join(", ")}\n` +
+                   `Stock por Color/Medida: ${stockInfo}\n` +
+                   `Imágenes por Color:\n${imagenesInfo}\n` +
+                   `----------------------------------------`;
+        }).join("\n\n"); // Separar cada producto por dos saltos de línea
 
-        const blob = new Blob([contenido], { type: "text/plain;charset=utf-8" });
+        const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
+        const a = document.createElement('a');
         a.href = url;
-        a.download = "productos.txt";
+        a.download = 'productos_exportados.txt';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -752,5 +758,9 @@ if (exportarBtn) {
     });
 }
 
-// Inicializar la tabla al cargar la página
-document.addEventListener("DOMContentLoaded", cargarYRenderizarProductos); // Ahora carga de Firestore al inicio
+// --- Inicialización al Cargar la Página ---
+document.addEventListener('DOMContentLoaded', () => {
+    cargarYRenderizarProductos(); // Carga y muestra los productos al cargar la página
+    renderMedidasInfo(); // Asegura que los campos de medida/precio se muestren al cargar
+    actualizarInputsImagenesPorColor(); // Muestra los inputs de imagen para los colores preseleccionados
+});
