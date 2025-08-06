@@ -1,37 +1,60 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solicitalo</title>
-    <link rel="stylesheet" href="../styles/mainstyles.css">
-    <link rel="stylesheet" href="../styles/paginaprincipal.css">
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Solicitalo</title>
+   <link rel="stylesheet" href="../styles/mainstyles.css">
+   <link rel="stylesheet" href="../styles/paginaprincipal.css">
 </head>
 <body>
-  <header id="encabezado"> <div class="logo">
+<header id="encabezado">
+    <div class="header-top">
+     <div class="logo">
         <a href="./index.html"><img src="./assets/logo.png" alt="Logo"></a>
+     </div>
     </div>
-    <div class="search-bar">
-        <input type="text" placeholder="Buscar...">
-        <!-- <button type="submit" class="search-bar-btn" id="search-button">Buscar</button>  -->
-        <div id="search-suggestions" style="display: none;"></div> 
-    </div>
-    <a href="cart/carrito.html" class="cart-icon">🛒</a>
-    <a href="admin/admin.html" class="user-icon">👤</a>
-  </header>
-  <main>
-    <br>
-    <div class="navegacion-categorias mostrar" id="menu-categorias">
-      <a href="#" class="categoria">🏘️Habitación</a>
-      <a href="#" class="categoria">🍳Cocina</a>
-      <a href="#" class="categoria">🛀Baño</a>
-      <a href="#" class="categoria">🔥Combosas</a>
-    </div>
-    <div class="contenedor-main">
-      <div class="contenedor-productos" id="contenedor-productos">
+    <div class="header-controls">
+      <div class="search-bar">
+        <input type="text" placeholder="Buscar..." class="search-bar">
+        <div id="search-suggestions" style="display: none;"></div>
       </div>
     </div>
-  </main>
+  <div class="header-icons">
+    <div class="cart-preview-container">
+        <a href="cart/carrito.html" class="cart-icon-link">
+          <i>🛒</i>
+          <span id="cart-count" class="cart-count">0</span>
+        </a>
+        <div id="cart-preview" class="cart-preview">
+          <div class="cart-preview-header">
+            <h3>Mi Carrito</h3>
+            <span id="close-preview" class="close-preview">&times;</span>
+          </div>
+          <div id="cart-preview-items" class="cart-preview-items">
+            <div class="cart-empty-message">El carrito está vacío.</div>
+          </div>
+          <div id="cart-preview-footer" class="cart-preview-footer">
+            <a href="cart/carrito.html" class="ver-mas-link">Ver más...</a>
+          </div>
+        </div>
+    </div>
+    <a href="admin/admin.html" class="user-icon">👤</a>
+  </div>
+</header>
+<main>
+   <br>
+   <div class="navegacion-categorias mostrar" id="menu-categorias">
+     <a href="#" class="categoria">🏘️Habitación</a>
+     <a href="#" class="categoria">🍳Cocina</a>
+     <a href="#" class="categoria">🛀Baño</a>
+     <a href="#" class="categoria">🔥Combosas</a>
+   </div>
+   <div class="contenedor-main">
+    <div class="contenedor-productos" id="contenedor-productos">
+    </div>
+   </div>
+</main>
 </body>
 <script type="module" src="../js/publico.js"></script>
 </html>

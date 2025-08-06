@@ -1,12 +1,12 @@
-// producto.js (Versión Modificada para Firebase Firestore)
+// producto.js
 
-// 1. Importa las funciones necesarias de Firebase SDKs usando las URLs CDN completas.
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"; // Se añade 'getDocs' para productos recomendados
 
-// 2. Tu configuración de la aplicación Firebase (¡Asegúrate de que sea la misma que en admin.js y carrito.js!)
+
 const firebaseConfig = {
-    apiKey: "AIzaSyCvPAEuNQVNnIUbSk0ggegsUps9DW6MS8", // Tu API Key
+    apiKey: "AIzaSyCvPAEuNQVNnIUbSk0ggegsUps9DW6MS8", 
     authDomain: "calm-todo-blanco.firebaseapp.com",
     projectId: "calm-todo-blanco",
     storageBucket: "calm-todo-blanco.appspot.com",
@@ -15,22 +15,18 @@ const firebaseConfig = {
     measurementId: "G-2E6EF3K5TL"
 };
 
-// 3. Inicializar Firebase
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const productosCollection = collection(db, 'productos'); // Referencia a la colección 'productos'
+const productosCollection = collection(db, 'productos'); 
 
-// Función global para obtener la imagen de placeholder
-// Asegúrate de que esta ruta sea correcta desde la ubicación de tu archivo HTML
-// Por ejemplo, si producto.html está en 'pages' y 'assets' en la raíz, entonces '../assets/placeholder.png' es correcto.
 function getPlaceholderImage() {
-    return '../assets/placeholder.png'; // <-- ¡VERIFICA Y AJUSTA ESTA RUTA SEGÚN LA ESTRUCTURA DE TU PROYECTO!
+    return '../assets/placeholder.png'; 
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
     const params = new URLSearchParams(window.location.search);
-    // Asumimos que el 'id' que pasas en la URL es el ID del documento en Firestore
-    const idProductoFirestore = params.get("id"); // Usamos el ID de Firestore directamente como string
+    const idProductoFirestore = params.get("id"); 
 
     if (!idProductoFirestore) {
         document.getElementById("detalle-producto").innerHTML = "<p>ID de producto no proporcionado en la URL.</p>";
@@ -54,7 +50,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    // --- Renderizado del Detalle del Producto ---
     const detalle = document.getElementById("detalle-producto");
     detalle.innerHTML = `
         <div id="carrusel" class="carrusel"></div>
@@ -77,7 +72,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
     `;
 
-    // --- Obtener referencias a los elementos después de que se han renderizado ---
+
     const precioDisplay = document.getElementById("precio-display");
     const cantidadInput = document.getElementById("cantidad");
     const colorSelect = document.getElementById("color");
@@ -85,13 +80,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     const stockDisponibleText = document.getElementById("stock-disponible");
     const agregarAlCarritoBtn = document.getElementById("agregar-al-carrito-btn");
 
-    // --- Generar Opciones de Colores ---
-    // Si 'colores' es un array en Firestore, úsalo. Si no, genera a partir de stockColoresMedidas
+
     let coloresDisponibles = [];
     if (Array.isArray(producto.colores) && producto.colores.length > 0) {
         coloresDisponibles = producto.colores;
     } else if (producto.stockColoresMedidas) {
-        // Si no hay array de colores, inferir de stockColoresMedidas (claves como "Color-Medida")
+
         const coloresSet = new Set();
         for (const clave in producto.stockColoresMedidas) {
             if (producto.stockColoresMedidas.hasOwnProperty(clave)) {
@@ -108,12 +102,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             .join("");
         colorSelect.innerHTML = colorOptionsHTML;
     } else {
-        // Si no hay colores, oculta los selectores de color
+
         document.querySelector('label[for="color"]').style.display = 'none';
         colorSelect.style.display = 'none';
     }
 
-    // --- Función para actualizar las opciones de Medida y el Stock, y AHORA EL PRECIO ---
+
     function actualizarMedidasYStock() {
         const colorElegido = colorSelect.value;
         const tallesDisponiblesParaColor = new Set();
@@ -149,7 +143,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const medidaOptionsHTML = tallesArray.map(medida => `<option value="${medida}">${medida}</option>`).join("");
         medidaSelect.innerHTML = medidaOptionsHTML;
 
-        // Seleccionar la primera medida disponible por defecto
+
         if (tallesArray.length > 0) {
             medidaSelect.value = tallesArray[0];
         }
@@ -182,7 +176,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         cantidadInput.min = (stockActual > 0) ? 1 : 0;
     }
 
-    // --- Actualiza el precio visible en la UI ---
+
     function actualizarPrecioProducto() {
         const medidaElegida = medidaSelect.value;
         const precioActual = producto.preciosPorMedida?.[medidaElegida];
@@ -205,7 +199,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    // --- FUNCIÓN CLAVE: Actualiza el Carrusel con imágenes del color seleccionado ---
+
     function actualizarCarruselPorColor() {
         const colorElegido = colorSelect.value;
         const imagenesDelColor = producto.imagenesPorColor?.[colorElegido] || [];
@@ -217,7 +211,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         crearCarrusel(imagenesParaCarrusel, "carrusel");
     }
 
-    // --- Event Listeners para actualizar la UI ---
+
     colorSelect.addEventListener("change", actualizarMedidasYStock);
     medidaSelect.addEventListener("change", () => {
         actualizarCantidadMaxima();
@@ -225,11 +219,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
     cantidadInput.addEventListener("input", actualizarCantidadMaxima);
 
-    // Inicializar la interfaz al cargar la página
+
     if (coloresDisponibles.length > 0) {
         colorSelect.value = coloresDisponibles[0];
     } else {
-        // Si no hay colores, intentar inicializar medidas con todas las disponibles si aplica
+
         const allMedidas = new Set();
         for (const clave in producto.stockColoresMedidas) {
             if (producto.stockColoresMedidas.hasOwnProperty(clave)) {
@@ -240,13 +234,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         const medidaOptionsHTML = Array.from(allMedidas).map(medida => `<option value="${medida}">${medida}</option>`).join("");
         medidaSelect.innerHTML = medidaOptionsHTML;
     }
-    actualizarMedidasYStock(); // Inicia la cascada de actualizaciones
+    actualizarMedidasYStock();
 
-    // --- Productos Recomendados ---
+    
     const contenedorRecomendados = document.getElementById("recomendados");
 
     if (contenedorRecomendados) {
-        // Necesitamos cargar TODOS los productos para buscar recomendados
+
         try {
             const snapshotRecomendados = await getDocs(productosCollection);
             const todosProductos = [];
@@ -261,7 +255,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     Array.isArray(p.imagenesPorColor[color]) && p.imagenesPorColor[color].length > 0
                 ) &&
                 Object.values(p.preciosPorMedida || {}).length > 0
-            ).slice(0, 3); // Limitar a 3 productos recomendados
+            ).slice(0, 3);
 
             if (recomendados.length > 0) {
                 const divTarjetasRelacionadas = document.createElement("div");
@@ -310,10 +304,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    // --- Listener para el botón "Agregar al Carrito" ---
-    // Este listener llama a la función local 'agregarAlCarrito' (definida abajo)
     agregarAlCarritoBtn.addEventListener("click", () => {
-        // Asegúrate de que 'producto' esté disponible y tenga un 'id' antes de llamar
+
         if (producto && producto.id) {
             agregarAlCarrito(producto.id);
         } else {
@@ -322,15 +314,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 });
-
-// --- Función para Agregar al Carrito (GLOBAL para la página producto.html) ---
-// Esta función es la que se llama desde el botón "Agregar al carrito" en producto.html.
-// Su propósito es recopilar los datos del formulario de la página y luego
-// llamar a la función `window.agregarAlCarrito` que proviene de `carrito.js`.
 async function agregarAlCarrito(idProductoFirestore) { 
-    // Obtener el producto directamente de Firestore para asegurar la información más reciente
-    // Esto es un doble chequeo de stock y precio, ya que `carrito.js` también lo hará,
-    // pero asegura que la UI del producto refleje el estado actual antes de enviar al carrito.
+
     let productoActualizado = null;
     try {
         const docRef = doc(db, 'productos', idProductoFirestore);
@@ -356,7 +341,7 @@ async function agregarAlCarrito(idProductoFirestore) {
     const color = colorSelect.value;
     const medida = medidaSelect.value;
 
-    // Validaciones (mantenerlas aquí)
+
     if (cantidad <= 0 || isNaN(cantidad)) {
         alert("Por favor, ingresa una cantidad válida (mayor a cero) para agregar al carrito.");
         return;
@@ -377,8 +362,6 @@ async function agregarAlCarrito(idProductoFirestore) {
         return;
     }
 
-    // Llamar a la función `agregarAlCarrito` del módulo `carrito.js` (ahora expuesta a `window`)
-    // ¡Es crucial que `carrito.js` se cargue ANTES que `producto.js` en tu HTML!
     if (typeof window.agregarAlCarrito === 'function') {
         await window.agregarAlCarrito(
             productoActualizado.id,
@@ -395,8 +378,8 @@ async function agregarAlCarrito(idProductoFirestore) {
     }
 }
 
-// --- Función del Carrusel (Global para la página producto.html) ---
-// Esta función gestiona la visualización del carrusel de imágenes del producto.
+
+
 function crearCarrusel(imagenes, contenedorId) {
     const contenedor = document.getElementById(contenedorId);
     if (!contenedor) {

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | Tienda</title>
+    <link rel="stylesheet" href="../styles/mainstyles.css">
+    <link rel="stylesheet" href="../styles/checkout.css">
+</head>
+<body>
+
+    <header>
+    <div class="header-top">
+     <div class="logo">
+        <a href="../index.html"><img src="../assets/logo.png" alt="Logo"></a>
+     </div>
+    </div>
+    </header>
+
+    <main class="contenedor">
+        <h1>Finalizar Compra</h1>
+
+        <div class="checkout-grid">
+            
+            <div class="checkout-form">
+                <h2>Datos de envío</h2>
+                <form id="checkout-form">
+                    <label for="nombre">Nombre:</label>
+                    <input type="text" id="nombre" required>
+                    <br>
+                    <br>
+                    <label for="apellido">Apellido:</label>
+                    <input type="text" id="apellido" required>
+                    <br>
+                    <br>
+                    <label for="direccion">Dirección:</label>
+                    <input type="text" id="direccion" required>
+                    <br>
+                    <br>
+                    <label for="telefono">Teléfono (WhatsApp):</label>
+                    <input type="tel" id="telefono" required placeholder="Ej: 5493411234567">
+                    <br>
+                    <br>
+                    <button type="submit" id="boton-pagar">
+                        Pagar
+                    </button>
+                </form>
+            </div>
+
+            <div class="checkout-summary">
+                <h2>Resumen de la compra</h2>
+                <div id="checkout-items-container">
+                    </div>
+                <div class="checkout-total">
+                    <h3>Total: $<span id="checkout-total">0.00</span></h3>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <script type="module" src="../js/checkout.js"></script>
+</body>
+</html>

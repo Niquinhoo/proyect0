@@ -94,3 +94,33 @@ main {
   min-width: 120px;
   font-weight: bold;
 }
+
+@media (min-width: 768px) {
+    
+    header .logo img {
+        height: 50px;
+    }
+
+    .formulario button {
+        width: auto;
+        padding: 12px 25px;
+    }
+    
+    .color-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
+    }
+    
+    #stockContainer .stock-input-group {
+        flex-direction: row; 
+        align-items: center;
+    }
+
+    #stockContainer .stock-input-group label {
+        min-width: 120px; 
+        margin-bottom: 0;
+    }
+
+    .tabla-productos table {
+        font-size: 1rem;
+    }
+}

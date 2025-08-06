@@ -136,3 +136,137 @@ footer{
   position: fixed;
   bottom: 0;
 }
+
+/* ===================================== */
+/* Estilos Base y para Móviles (Mobile-First) */
+/* ===================================== */
+
+@media (max-width: 768px) {
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Lato&display=swap');
+
+body {
+    background-color: #dddddd;
+    font-family: "Lato", sans-serif;
+    margin-top: 75px; /* Agrega un margen superior para el encabezado fijo */
+}
+
+/* Encabezado */
+header {
+    display: flex;
+    flex-direction: column; /* Apila los elementos verticalmente en móviles */
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    background-color: rgb(255, 255, 255);
+    border-bottom: 1px solid #ffffffd0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+.logo img {
+    width: 35px;
+    height: 35px;
+    padding: 0; /* Elimina el padding extra en móviles */
+}
+
+.search-bar {
+    position: relative;
+    width: 100%;
+    margin: 0 0 10px; /* Centra y da espacio en la parte inferior en móviles */
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    box-sizing: border-box;
+}
+
+#search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#search-suggestions ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#search-suggestions li {
+    padding: 10px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+}
+
+#search-suggestions li:last-child {
+    border-bottom: none;
+}
+
+#search-suggestions li:hover {
+    background-color: #f0f0f0;
+}
+
+.social-icons {
+    display: flex;
+    gap: 15px;
+    margin: 0;
+}
+
+.social-icons a {
+    color: #555;
+    text-decoration: none;
+    font-size: 1.2em; /* Reduce el tamaño en móviles */
+}
+
+.social-icons a:hover {
+    color: #007BFF;
+}
+
+.social-icons img {
+    width: 20px; /* Reduce el tamaño de los íconos */
+    height: 20px;
+}
+
+a {
+    text-decoration: none;
+    color: #000000;
+}
+
+footer {
+    background-color: #9a9a9a;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+    z-index: 1000;
+}
+}

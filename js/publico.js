@@ -1,12 +1,13 @@
-// publico.js (Modificado para Firebase Firestore y mantener funcionalidades existentes)
-
-// 1. Importa las funciones necesarias de Firebase SDKs usando las URLs CDN completas.
+// publico.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// 2. Tu configuración de la aplicación Firebase (¡Asegúrate de que sea la misma que en admin.js y producto.js!)
+
+import { actualizarContadorCarrito, renderizarCartPreview } from './carrito.js';
+
+
 const firebaseConfig = {
-    apiKey: "AIzaSyCvPAEuNQVNnIUbSk0ggegsUps9DW6MS8", // Tu API Key
+    apiKey: "AIzaSyCvPAEuNQVNnIUbSk0ggegsUps9DW6MS8",
     authDomain: "calm-todo-blanco.firebaseapp.com",
     projectId: "calm-todo-blanco",
     storageBucket: "calm-todo-blanco.appspot.com",
@@ -15,28 +16,30 @@ const firebaseConfig = {
     measurementId: "G-2E6EF3K5TL"
 };
 
-// 3. Inicializar Firebase
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const productosCollection = collection(db, 'productos'); // Referencia a la colección 'productos'
+const productosCollection = collection(db, 'productos');
 
-// Función global para obtener la imagen de placeholder
-const getPlaceholderImage = () => './assets/placeholder.png'; // <-- ¡AJUSTA ESTA RUTA!
 
-document.addEventListener("DOMContentLoaded", async () => { // Usamos 'async' porque vamos a usar 'await'
+const getPlaceholderImage = () => './assets/placeholder.png';
+
+document.addEventListener("DOMContentLoaded", async () => {
     const contenedorProductos = document.getElementById("contenedor-productos");
-    let productos = []; // La lista de productos se cargará de Firestore
+    let productos = [];
 
-    // --- Referencias a los elementos de la barra de búsqueda y el nuevo contenedor de sugerencias ---
+
     const searchInput = document.querySelector('header .search-bar input[type="text"]');
-    const searchButton = document.getElementById('search-button'); 
-    const suggestionsContainer = document.getElementById('search-suggestions'); 
-
-    // --- Referencias para el efecto de scroll ---
+    const searchButton = document.getElementById('search-button');
+    const suggestionsContainer = document.getElementById('search-suggestions');
     const header = document.getElementById("encabezado");
     const menuCategorias = document.getElementById("menu-categorias");
+    
 
-    // Validaciones para asegurar que los elementos existen
+    const cartPreviewContainer = document.querySelector('.cart-preview-container');
+    const closePreviewBtn = document.getElementById('close-preview');
+
+
     if (!contenedorProductos) {
         console.error("No se encontró el contenedor con ID 'contenedor-productos'.");
         return;
@@ -58,36 +61,34 @@ document.addEventListener("DOMContentLoaded", async () => { // Usamos 'async' po
         console.error("No se encontró el menú de categorías con ID 'menu-categorias'. El efecto de scroll no funcionará.");
     }
 
-    // --- Función para determinar el precio a mostrar en la tarjeta (EXISTENTE) ---
+    if (!cartPreviewContainer) {
+        console.error("No se encontró el contenedor del carrito flotante '.cart-preview-container'.");
+    }
+
+
     function getDisplayPrice(producto) {
         if (!producto.preciosPorMedida || Object.keys(producto.preciosPorMedida).length === 0) {
             return "Precio no disponible";
         }
-
         const tallesOrdenados = {
             sabana: ["1 plaza", "2 plazas", "queen", "king"],
             acolchado: ["1 plaza", "2 plazas", "queen", "king"],
             frazada: ["1 plaza", "2 plazas", "queen", "king"],
             toalla: ["300g", "400g", "500g", "600g"]
         };
-
         const tallesPrioritarios = tallesOrdenados[producto.tipo];
-
         if (tallesPrioritarios && tallesPrioritarios.length > 0) {
             if (producto.tipo === 'toalla' && producto.preciosPorMedida?.['500g']) {
                 return `$${producto.preciosPorMedida['500g'].toFixed(2)}`;
             }
-
             if (tallesPrioritarios.length >= 2) {
                 const segundoTallePrioritario = tallesPrioritarios[1];
                 if (producto.preciosPorMedida?.[segundoTallePrioritario]) {
                     return `$${producto.preciosPorMedida[segundoTallePrioritario].toFixed(2)}`;
                 }
             }
-
             const preciosDisponibles = Object.values(producto.preciosPorMedida)
-                                                .filter(precio => typeof precio === 'number' && precio > 0);
-
+                .filter(precio => typeof precio === 'number' && precio > 0);
             if (preciosDisponibles.length > 0) {
                 const minPrecio = Math.min(...preciosDisponibles);
                 if (preciosDisponibles.length > 1 && !tallesPrioritarios.some(t => producto.preciosPorMedida[t] === minPrecio)) {
@@ -96,7 +97,6 @@ document.addEventListener("DOMContentLoaded", async () => { // Usamos 'async' po
                 return `$${minPrecio.toFixed(2)}`;
             }
         }
-
         const allPrices = Object.values(producto.preciosPorMedida || {});
         if (allPrices.length > 0) {
             const minPrice = Math.min(...allPrices);
@@ -105,33 +105,26 @@ document.addEventListener("DOMContentLoaded", async () => { // Usamos 'async' po
             }
             return `$${minPrice.toFixed(2)}`;
         }
-
         return "Precio no definido";
     }
 
-    // --- Renderizar productos (EXISTENTE) ---
     function renderizarProductos(productosARenderizar) {
         contenedorProductos.innerHTML = "";
         if (productosARenderizar.length === 0) {
             contenedorProductos.innerHTML = "<p>No hay productos disponibles que coincidan con la búsqueda.</p>";
             return;
         }
-
         productosARenderizar.forEach(producto => {
             const card = document.createElement("div");
             card.classList.add("producto");
-
             let imagenPrincipal = getPlaceholderImage();
             let imagenSecundaria = getPlaceholderImage();
-
             const coloresConImagenes = Object.keys(producto.imagenesPorColor || {}).filter(color =>
                 Array.isArray(producto.imagenesPorColor[color]) && producto.imagenesPorColor[color].length > 0
             );
-
             if (coloresConImagenes.length > 0) {
                 const primerColorConImagen = coloresConImagenes[0];
                 imagenPrincipal = producto.imagenesPorColor[primerColorConImagen][0];
-
                 if (producto.imagenesPorColor[primerColorConImagen].length > 1) {
                     imagenSecundaria = producto.imagenesPorColor[primerColorConImagen][1];
                 } else if (coloresConImagenes.length > 1) {
@@ -141,11 +134,8 @@ document.addEventListener("DOMContentLoaded", async () => { // Usamos 'async' po
                     imagenSecundaria = imagenPrincipal;
                 }
             }
-
             const nombre = producto.nombre || "Producto sin nombre";
             const precioMostrado = getDisplayPrice(producto);
-
-            // Ajuste en la ruta del enlace para que funcione desde index.html a producto.html
             card.innerHTML = `
                 <a href="./productos/producto.html?id=${encodeURIComponent(producto.id)}" class="producto-link">
                     <img src="${imagenPrincipal}"
@@ -158,7 +148,6 @@ document.addEventListener("DOMContentLoaded", async () => { // Usamos 'async' po
                     <p class="descripcion"></p>
                 </a>
             `;
-
             contenedorProductos.appendChild(card);
         });
 
@@ -176,35 +165,31 @@ document.addEventListener("DOMContentLoaded", async () => { // Usamos 'async' po
         });
     }
 
-    // --- Cargar productos de Firebase al inicio ---
+
     try {
         const snapshot = await getDocs(productosCollection);
-        productos = []; // Limpia el array antes de llenarlo
+        productos = [];
         snapshot.forEach(doc => {
             productos.push({ id: doc.id, ...doc.data() });
         });
-        
         if (productos.length === 0) {
             contenedorProductos.innerHTML = "<p>No hay productos disponibles en la base de datos.</p>";
         } else {
-            renderizarProductos(productos); // Renderiza los productos cargados
+            renderizarProductos(productos);
         }
     } catch (error) {
         console.error("Error al cargar productos de Firestore:", error);
         contenedorProductos.innerHTML = `<p>Error al cargar los productos: ${error.message}</p>`;
     }
 
-
-    // --- FUNCIONES PARA LAS SUGERENCIAS ---
+    // --- Tu lógica de búsqueda intacta ---
     function mostrarSugerencias(suggestedProducts) {
         suggestionsContainer.innerHTML = '';
         suggestionsContainer.style.display = 'block';
-
         if (suggestedProducts.length === 0) {
             suggestionsContainer.style.display = 'none';
             return;
         }
-
         const ul = document.createElement('ul');
         suggestedProducts.forEach(product => {
             const li = document.createElement('li');
@@ -224,22 +209,17 @@ document.addEventListener("DOMContentLoaded", async () => { // Usamos 'async' po
         suggestionsContainer.style.display = 'none';
     }
 
-    // --- Función de búsqueda y redirección ---
     function buscarProducto() {
         const searchTerm = searchInput.value.trim().toLowerCase();
-        
         if (searchTerm.length === 0) {
-            renderizarProductos(productos); // Si la búsqueda está vacía, renderiza todos los productos
+            renderizarProductos(productos);
             limpiarSugerencias();
             return;
         }
-
         let productoEncontrado = null;
         let mejorCoincidencia = -1;
-
         productos.forEach(producto => {
             const nombreProducto = producto.nombre.toLowerCase();
-
             if (nombreProducto === searchTerm) {
                 productoEncontrado = producto;
                 mejorCoincidencia = 2;
@@ -252,7 +232,6 @@ document.addEventListener("DOMContentLoaded", async () => { // Usamos 'async' po
                 mejorCoincidencia = 0;
             }
         });
-
         if (productoEncontrado) {
             window.location.href = `./productos/producto.html?id=${encodeURIComponent(productoEncontrado.id)}`;
             limpiarSugerencias();
@@ -268,11 +247,9 @@ document.addEventListener("DOMContentLoaded", async () => { // Usamos 'async' po
         }
     }
 
-    // --- Event Listeners para la barra de búsqueda y sugerencias ---
     if (searchButton) {
         searchButton.addEventListener('click', buscarProducto);
     }
-    
     if (searchInput) {
         searchInput.addEventListener('keyup', (event) => {
             const searchTerm = searchInput.value.trim().toLowerCase();
@@ -285,24 +262,20 @@ document.addEventListener("DOMContentLoaded", async () => { // Usamos 'async' po
                 limpiarSugerencias();
             }
         });
-
         searchInput.addEventListener('keypress', (event) => {
             if (event.key === 'Enter') {
                 buscarProducto();
             }
         });
-
         searchInput.addEventListener('blur', () => {
-            setTimeout(limpiarSugerencias, 100); 
+            setTimeout(limpiarSugerencias, 100);
         });
     }
 
-    // Código de scroll (corregido)
+
     let ultimaPosicionScroll = window.scrollY;
-    
     window.addEventListener("scroll", () => {
         const posicionActual = window.scrollY;
-
         if (header && menuCategorias) {
             if (posicionActual > ultimaPosicionScroll) {
                 header.classList.add("ocultar-header");
@@ -314,7 +287,7 @@ document.addEventListener("DOMContentLoaded", async () => { // Usamos 'async' po
                 menuCategorias.classList.add("mostrar");
             }
         } else if (header) {
-             if (posicionActual > ultimaPosicionScroll) {
+            if (posicionActual > ultimaPosicionScroll) {
                 header.classList.add("ocultar-header");
             } else {
                 header.classList.remove("ocultar-header");
@@ -330,4 +303,41 @@ document.addEventListener("DOMContentLoaded", async () => { // Usamos 'async' po
         }
         ultimaPosicionScroll = posicionActual;
     });
+
+    if (cartPreviewContainer) {
+        actualizarContadorCarrito();
+
+
+        cartPreviewContainer.addEventListener('mouseenter', () => {
+            renderizarCartPreview();
+            cartPreviewContainer.classList.add('is-active');
+        });
+
+
+        cartPreviewContainer.addEventListener('mouseleave', () => {
+            cartPreviewContainer.classList.remove('is-active');
+        });
+
+
+        cartPreviewContainer.addEventListener('click', (event) => {
+            if (window.innerWidth <= 768) {
+                event.preventDefault();
+                if (!cartPreviewContainer.classList.contains('is-active')) {
+                    renderizarCartPreview();
+                    cartPreviewContainer.classList.add('is-active');
+                } else {
+                    const isClickInsidePreview = event.target.closest('#cart-preview');
+                    if (!isClickInsidePreview) {
+                         cartPreviewContainer.classList.remove('is-active');
+                    }
+                }
+            }
+        });
+
+        if(closePreviewBtn) {
+            closePreviewBtn.addEventListener('click', () => {
+                cartPreviewContainer.classList.remove('is-active');
+            });
+        }
+    }
 });
