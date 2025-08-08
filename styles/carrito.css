@@ -1,3 +1,7 @@
+.carrito-altura{
+  padding: 100px 5px;
+}
+
 #carrito-contenedor {
   margin-top: 20px;
 }
@@ -18,12 +22,19 @@
 
 h1{
   text-align: center;
-  margin-top: 20px;
-  margin-bottom: 20px;
   color: #000000;
   font-size: 24px;
   font-weight: bold;
   text-transform: uppercase;
+  background-color: white;
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  max-width: 800px;
+  margin: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .carrito-item img {
@@ -61,8 +72,7 @@ h1{
   padding: 5px 10px;
   border-radius: 5px;
   cursor: pointer;
-  margin-left: 50px;
-  margin-bottom: 5px;
+
 }
 
 #carrito-total {
@@ -75,6 +85,15 @@ h1{
   justify-content: center;
   align-items: center;
   margin-bottom: 10px;
+}
+
+#carrito-summary{
+    background: white;
+    padding: 20px;
+    border-radius: 30px;
+    width: 60%;
+    margin: auto;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 #vaciar-carrito {
@@ -115,7 +134,12 @@ h1{
   transition: all 0.3s ease-in-out;
 }
 
-@media (min-width: 768px) {
+@media (max-width: 768px) {
+
+    .carrito-altura {
+      padding: 0px 5px;
+    }
+
     .carrito-item {
         flex-direction: row; 
         align-items: center;
@@ -129,7 +153,6 @@ h1{
 
     .eliminar {
         width: auto;
-        margin-left: 50px;
     }
     
     #carrito-acciones {

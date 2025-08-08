@@ -62,7 +62,7 @@
   background-color: rgb(255, 255, 255);
   border-bottom: 1px solid #ffffffd0;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  z-index: 100;
+  z-index: 99;
   position: fixed;
   margin-top: 10px;
   top: 100px;
@@ -83,6 +83,7 @@
   transform: translateY(0);
   transition: all 0.4s ease;
 }
+
 /* Para ocultar hacia arriba */
 .ocultar-header {
   transform: translateY(-100%);
@@ -105,7 +106,7 @@
 .cart-preview-container {
     position: relative;
     display: inline-block;
-    z-index: 1001; /* Asegura que esté sobre otros elementos del header */
+    z-index: 103;
 }
 
 /* El enlace del ícono del carrito */
@@ -125,12 +126,12 @@
     padding: 2px 6px;
     font-size: 0.7rem;
     font-weight: bold;
-    display: none; /* Oculto por defecto, se muestra con JS */
+    display: none;
 }
 
 /* La vista previa del carrito (el popup) */
 .cart-preview {
-    display: none; /* Oculto por defecto */
+    display: none;
     position: absolute;
     top: 100%;
     right: 0;
@@ -144,6 +145,7 @@
     opacity: 0;
     transition: transform 0.3s ease, opacity 0.3s ease;
     padding: 10px;
+    z-index: 404;
 }
 
 /* Título de la vista previa */
@@ -162,14 +164,13 @@
     color: #1d3557;
 }
 
-/* Botón de cerrar (si lo incluyes en tu HTML) */
 .close-preview {
     cursor: pointer;
     font-size: 1.5rem;
     color: #555;
 }
 
-/* Contenedor de los ítems */
+
 .cart-preview-items {
     max-height: 200px; /* Limita la altura para un máximo de 2 ítems */
     overflow-y: auto;
@@ -213,7 +214,7 @@
     color: #777;
 }
 
-/* Pie de la vista previa */
+
 .cart-preview-footer {
     text-align: center;
     padding-top: 10px;
@@ -232,19 +233,20 @@
     color: #2b568d;
 }
 
-/* Estado de mostrar el popup (controlado por JS) */
+
 .cart-preview-container:hover .cart-preview,
 .cart-preview-container.is-active .cart-preview {
-    display: block; /* Muestra el contenedor */
+    display: block;
     transform: translateY(0);
     opacity: 1;
+    z-index: 104;
 }
 
 
 @media (max-width: 768px) {
 
 
-/* Contenedor de Productos */
+
 .contenedor-productos {
     display: grid;
     grid-template-columns: 1fr;
@@ -311,9 +313,9 @@
     background-color: rgb(255, 255, 255);
     border-bottom: 1px solid #ffffffd0;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    z-index: 100;
+    z-index: 99;
     position: fixed;
-    top: 160px;
+    top: 130px;
     left: 0;
     right: 0;
 }
@@ -342,11 +344,22 @@
 }
 
 .cart-preview {
-    left: -10px; /* Ajusta la posición para que no se salga de la pantalla */
+    left: -290px; 
     right: auto;
-}
+    top: 35px;
+    width: 200px;
+    z-index: 104;
+    transform: translateY(-100%);
 }
 
+.header-icons {
+    flex-direction: row; 
+    gap: 10px;
+    place-self: flex-end;
+    top: 15px;
+    position: inherit;
+}
+}
 
 
 @media (min-width: 768px) {

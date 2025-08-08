@@ -39,9 +39,14 @@ h2 {
   margin-top: 10px;
 }
 
-.detalle-info select,
-.detalle-info input {
+.detalle-info select {
   width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+.detalle-info input {
+  width: 93.5%;
   padding: 8px;
   margin-bottom: 10px;
 }
@@ -63,6 +68,10 @@ h2 {
   margin-top: 20px;
   margin-bottom: 20px;
   padding: 20px;
+  display: -webkit-inline-box;
+  align-items: center;
+  justify-content: center;
+  
 }
 
 .producto-rel-card{
@@ -74,6 +83,9 @@ h2 {
   text-align: center;
   padding: 10px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin: 15px;
+  top: -80px;
+  position: relative;
 }
 
 .producto-rel-card img {
@@ -95,18 +107,12 @@ h2 {
     justify-content: center;
     gap: 10px;
     margin: auto;
-    /* Asegúrate de que este contenedor no tenga 'overflow: hidden' si quieres que el zoom
-       pueda desbordarse ligeramente, pero si quieres que se recorte, añádelo aquí.
-       Generalmente, para carruseles, se maneja el 'overflow' en el contenedor de la imagen. */
 }
 
-/* ... (tu CSS existente) ... */
-
-/* El div que contiene la imagen principal del carrusel */
 .imagen-carrusel {
-    overflow: hidden; /* ¡Crucial para que el zoom se recorte dentro del contenedor! */
+    overflow: hidden;
     border-radius: 8px;
-    width: auto; /* Puedes darle un ancho fijo si lo prefieres para consistencia */
+    width: auto; 
     height: 450px;
     display: flex;
     align-items: center;
@@ -186,9 +192,14 @@ h2 {
     gap: 15px;
   }
 
-  .detalle-info {
+  .detalle-info select{
     max-width: 95%;
-    margin: 20px 0;
+    margin: 10px 0;
+  }
+
+  .detalle-info input {
+    max-width: 90%;
+    margin: 10px 0;
   }
 
   h2 {
@@ -197,11 +208,17 @@ h2 {
 
   .productos-relacionados {
     padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
   }
 
   .producto-rel-card {
     width: 100%;
     margin-bottom: 15px;
+    top: -35px;
   }
 
   .imagen-carrusel {
