@@ -304,40 +304,44 @@ document.addEventListener("DOMContentLoaded", async () => {
         ultimaPosicionScroll = posicionActual;
     });
 
-    if (cartPreviewContainer) {
+// --- CÓDIGO DEL CARRITO MEJORADO (AÑADE ESTO) ---
+    const cartIconLink = document.querySelector('.cart-icon-link');
+    if (cartPreviewContainer && cartIconLink) {
         actualizarContadorCarrito();
 
-
+        // Lógica de escritorio: El hover sigue funcionando con tus reglas CSS
         cartPreviewContainer.addEventListener('mouseenter', () => {
             renderizarCartPreview();
-            cartPreviewContainer.classList.add('is-active');
         });
 
-
-        cartPreviewContainer.addEventListener('mouseleave', () => {
-            cartPreviewContainer.classList.remove('is-active');
+        // Lógica para todos los dispositivos: Click en el ícono del carrito
+        cartIconLink.addEventListener('click', (event) => {
+            // Si la vista previa NO está activa, la abrimos
+            if (!cartPreviewContainer.classList.contains('is-active')) {
+                event.preventDefault(); // Previene la redirección del enlace por defecto
+                cartPreviewContainer.classList.add('is-active');
+                renderizarCartPreview();
+            } else {
+                // Si ya está activa, el próximo clic redirige al href del enlace
+                // No hacemos event.preventDefault() para permitir la acción por defecto
+            }
         });
-
-
-        cartPreviewContainer.addEventListener('click', (event) => {
-            if (window.innerWidth <= 768) {
-                event.preventDefault();
-                if (!cartPreviewContainer.classList.contains('is-active')) {
-                    renderizarCartPreview();
-                    cartPreviewContainer.classList.add('is-active');
-                } else {
-                    const isClickInsidePreview = event.target.closest('#cart-preview');
-                    if (!isClickInsidePreview) {
-                         cartPreviewContainer.classList.remove('is-active');
-                    }
-                }
+        
+        // Lógica para cerrar el carrito al hacer clic fuera de él
+        document.addEventListener('click', (event) => {
+            const isClickInsideCart = cartPreviewContainer.contains(event.target);
+            // Cierra el carrito solo si el clic NO fue dentro del contenedor
+            if (!isClickInsideCart) {
+                cartPreviewContainer.classList.remove('is-active');
             }
         });
 
         if(closePreviewBtn) {
-            closePreviewBtn.addEventListener('click', () => {
+            closePreviewBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
                 cartPreviewContainer.classList.remove('is-active');
             });
         }
     }
+    // --- FIN DEL CÓDIGO DEL CARRITO MEJORADO ---
 });
