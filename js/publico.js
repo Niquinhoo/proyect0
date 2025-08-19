@@ -5,13 +5,13 @@ import { agregarProductoAlCarrito, actualizarContadorCarrito, renderizarCartPrev
 
 
 const firebaseConfig = {
-    apiKey: "AIzaSyCvPAEuNQVNnIUbSk0ggegsUps9DW6MS8",
-    authDomain: "calm-todo-blanco.firebaseapp.com",
-    projectId: "calm-todo-blanco",
-    storageBucket: "calm-todo-blanco.appspot.com",
-    messagingSenderId: "115599611256",
-    appId: "1:115599611256:web:fcde0c84c53ced5128e4d",
-    measurementId: "G-2E6EF3K5TL"
+  apiKey: "AIzaSyCvPAeCUNQvNnIUbSk0ggegsUps9DW6mS8",
+  authDomain: "calm-todo-blanco.firebaseapp.com",
+  projectId: "calm-todo-blanco",
+  storageBucket: "calm-todo-blanco.firebasestorage.app",
+  messagingSenderId: "115599611256",
+  appId: "1:115599611256:web:fcde0c84c53ced5128e48d",
+  measurementId: "G-2E6EF3K5TL"
 };
 
 
