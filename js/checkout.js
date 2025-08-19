@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const mensajeCodificado = encodeURIComponent(mensajeWhatsApp);
 
             // Abre una nueva pestaña con el mensaje de WhatsApp
-            const numeroDeAdmin = "5492657525796"; // ¡Asegúrate de que este sea tu número de WhatsApp!
+            const numeroDeAdmin = "5492657234218"; // ¡Asegúrate de que este sea tu número de WhatsApp!
             window.open(`https://wa.me/${numeroDeAdmin}?text=${mensajeCodificado}`, '_blank');
             
             // 2. Finalizar la compra y vaciar el carrito
