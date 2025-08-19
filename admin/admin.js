@@ -7,13 +7,13 @@ import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } 
 
 // Firebase Configuracion
 const firebaseConfig = {
-    apiKey: "AIzaSyCvPAEuNQVNnIUbSk0ggegsUps9DW6MS8", 
-    authDomain: "calm-todo-blanco.firebaseapp.com",
-    projectId: "calm-todo-blanco",
-    storageBucket: "calm-todo-blanco.appspot.com",
-    messagingSenderId: "115599611256",
-    appId: "1:115599611256:web:fcde0c84c53ced5128e4d",
-    measurementId: "G-2E6EF3K5TL"
+  apiKey: "AIzaSyCvPAeCUNQvNnIUbSk0ggegsUps9DW6mS8",
+  authDomain: "calm-todo-blanco.firebaseapp.com",
+  projectId: "calm-todo-blanco",
+  storageBucket: "calm-todo-blanco.firebasestorage.app",
+  messagingSenderId: "115599611256",
+  appId: "1:115599611256:web:fcde0c84c53ced5128e48d",
+  measurementId: "G-2E6EF3K5TL"
 };
 
 // 3. Inicializa Firebase
@@ -457,43 +457,44 @@ document.querySelectorAll('input[name="color"]').forEach(input => {
 });
 
 // Listener principal para agregar/editar producto
+// Listener principal para agregar/editar producto
 agregarBtn.addEventListener('click', async () => { // Marcamos la función como async
     // --- Validaciones---
     const tipo = tipoProductoSelect.value;
     const tallesDisponibles = tallesPorTipo[tipo] || [];
     const coloresSeleccionados = Array.from(document.querySelectorAll('input[name="color"]:checked'))
-        .map(c => c.value);
+         .map(c => c.value);
 
     const preciosMap = parsePreciosCombinados(preciosCombinadosInput.value);
     const tallesConPrecioDefinido = tallesDisponibles.filter(talle => preciosMap[talle] && preciosMap[talle] > 0);
 
     if (tallesDisponibles.length > 0 && tallesConPrecioDefinido.length === 0) {
-        alert("Debes definir un precio mayor a cero para al menos una de las medidas disponibles.");
-        return;
+         alert("Debes definir un precio mayor a cero para al menos una de las medidas disponibles.");
+         return;
     }
 
     if (!nombreInput.value.trim() || descripcionInput.value.trim() === "") {
-        alert("Por favor, completa el nombre y descripción del producto.");
-        return;
+         alert("Por favor, completa el nombre y descripción del producto.");
+         return;
     }
 
     if (coloresSeleccionados.length === 0) {
-        alert("Por favor, selecciona al menos un color disponible.");
-        return;
+         alert("Por favor, selecciona al menos un color disponible.");
+         return;
     }
 
     const stockMap = parseStockCombinado(stockCombinadoInput.value);
 
     const algunaCombinacionConStock = coloresSeleccionados.some(color => {
-        return tallesDisponibles.some(talle => {
+         return tallesDisponibles.some(talle => {
             const clave = `${color}-${talle}`;
             return (clave in stockMap && stockMap[clave] === null || stockMap[clave] > 0);
-        });
+         });
     });
 
     if (coloresSeleccionados.length > 0 && tallesDisponibles.length > 0 && !algunaCombinacionConStock) {
-        alert("Debes definir un stock mayor a cero para al menos una de las combinaciones de color y talle seleccionadas.");
-        return;
+         alert("Debes definir un stock mayor a cero para al menos una de las combinaciones de color y talle seleccionadas.");
+         return;
     }
     // --- Fin Validaciones ---
 
@@ -502,54 +503,81 @@ agregarBtn.addEventListener('click', async () => { // Marcamos la función como 
 
     // Si estamos editando un producto, empezamos con las imágenes que ya tenía el producto de Firestore.
     if (editandoProductoId) {
-        const prodOriginal = productos.find(p => p.id === editandoProductoId);
-        if (prodOriginal && prodOriginal.imagenesPorColor) {
+         const prodOriginal = productos.find(p => p.id === editandoProductoId);
+         if (prodOriginal && prodOriginal.imagenesPorColor) {
             Object.assign(finalImagesForColors, JSON.parse(JSON.stringify(prodOriginal.imagenesPorColor)));
-        }
+         }
     } else {
-        // Para nuevos productos, recuperamos las URLs subidas temporalmente via localStorage.
-        const tempImages = JSON.parse(localStorage.getItem('tempProductImages') || '{}');
-        Object.assign(finalImagesForColors, tempImages);
+         // Para nuevos productos, recuperamos las URLs subidas temporalmente via localStorage.
+         const tempImages = JSON.parse(localStorage.getItem('tempProductImages') || '{}');
+         Object.assign(finalImagesForColors, tempImages);
     }
     
     // Ahora, recorre los contenedores de vista previa en la UI para obtener el estado final de las imágenes
     document.querySelectorAll('.imagenes-preview-container').forEach(previewContainer => {
-        const color = previewContainer.dataset.color;
-        const imagesInPreview = Array.from(previewContainer.querySelectorAll('.uploaded-cloudinary-image')).map(img => img.src);
-        if (imagesInPreview.length > 0) {
+         const color = previewContainer.dataset.color;
+         const imagesInPreview = Array.from(previewContainer.querySelectorAll('.uploaded-cloudinary-image')).map(img => img.src);
+         if (imagesInPreview.length > 0) {
             finalImagesForColors[color] = imagesInPreview;
-        } else if (finalImagesForColors[color]) {
+         } else if (finalImagesForColors[color]) {
             delete finalImagesForColors[color];
-        }
+         }
     });
 
     // Asegurarse de que solo se guarden las imágenes de los colores actualmente seleccionados
     const coloresActualesSeleccionadosSet = new Set(coloresSeleccionados);
     for (const colorKey in finalImagesForColors) {
-        if (!coloresActualesSeleccionadosSet.has(colorKey)) {
+         if (!coloresActualesSeleccionadosSet.has(colorKey)) {
             delete finalImagesForColors[colorKey];
-        }
+         }
     }
-
+    
+    // --- LÓGICA AGREGADA PARA GUARDAR LOS CÓDIGOS HEXADECIMALES ---
+    // Recopilamos los datos del formulario (aquí, de los checkboxes)
+    // Asumimos que tienes una forma de ingresar los códigos, por ejemplo, en un nuevo input.
+    // Como no veo el input en tu código HTML, crearemos un mapa simple.
+    const coloresDisponibles = {};
+    coloresSeleccionados.forEach(colorName => {
+        // En un escenario real, aquí leerías el valor de un input
+        // Por ahora, usaremos un ejemplo fijo.
+        // ¡Importante! El nombre del color debe coincidir exactamente con el de imagenesPorColor
+        switch (colorName.toLowerCase()) {
+            case 'azul marino':
+                coloresDisponibles['Azul Marino'] = '#000080';
+                break;
+            case 'verde menta':
+                coloresDisponibles['Verde Menta'] = '#98FF98';
+                break;
+            case 'blanco':
+                coloresDisponibles['Blanco'] = '#FFFFFF';
+                break;
+            case 'negro':
+                coloresDisponibles['Negro'] = '#000000';
+                break;
+            default:
+                coloresDisponibles[colorName] = 'gray'; // Un color por defecto si no se encuentra
+        }
+    });
 
     const productoAProcesar = {
-        nombre: nombreInput.value,
-        preciosPorMedida: preciosMap,
-        descripcion: descripcionInput.value,
-        tipo: tipoProductoSelect.value,
-        colores: coloresSeleccionados,
-        stockColoresMedidas: stockMap,
-        imagenesPorColor: finalImagesForColors 
+         nombre: nombreInput.value,
+         preciosPorMedida: preciosMap,
+         descripcion: descripcionInput.value,
+         tipo: tipoProductoSelect.value,
+         colores: coloresSeleccionados,
+         stockColoresMedidas: stockMap,
+         imagenesPorColor: finalImagesForColors,
+        coloresDisponibles: coloresDisponibles // <-- ¡Campo agregado!
     };
 
     if (editandoProductoId) {
-        // *** ACTUALIZAR EN FIRESTORE ***
-        await actualizarProducto(editandoProductoId, productoAProcesar);
-        alert("Producto actualizado con éxito!");
+         // *** ACTUALIZAR EN FIRESTORE ***
+         await actualizarProducto(editandoProductoId, productoAProcesar);
+         alert("Producto actualizado con éxito!");
     } else {
-        // *** AGREGAR A FIRESTORE ***
-        await agregarProducto(productoAProcesar);
-        alert("Producto agregado con éxito!");
+         // *** AGREGAR A FIRESTORE ***
+         await agregarProducto(productoAProcesar);
+         alert("Producto agregado con éxito!");
     }
 
     limpiarFormulario();

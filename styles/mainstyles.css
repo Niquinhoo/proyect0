@@ -2,7 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Lato&display=swap');
 
 body {
-  background-color: #dddddd;
+  background-color: #eae9e9;
   font-family:"Lato", sans-serif;
 }
 
@@ -34,19 +34,17 @@ header{
   padding: 10px;
 }
 
-
-
 .search-bar {
     position: relative;
     display: inline-block;
     margin-right: 10px;
-    min-width: 400px;
+    min-width: 600px;
     max-width: 1000px;
     z-index: 10;
 }
 
 .search-bar input {
-    min-width: 400px;
+    min-width: 600px;
     max-width: 1200px;
     padding: 10px;
     border: 1px solid #ccc;
@@ -181,13 +179,13 @@ header {
 
 .search-bar {
     position: relative;
-    width: 100%;
+    min-width: 100px;
     margin: 0 0 10px;
     z-index: 10;
 }
 
 .search-bar input {
-    width: 100%;
+    min-width: 100px;
     border: 1px solid #ccc;
     border-radius: 20px;
     box-sizing: border-box;

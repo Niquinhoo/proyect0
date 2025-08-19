@@ -16,7 +16,7 @@
     </div>
     <div class="header-controls">
       <div class="search-bar">
-        <input type="text" placeholder="Buscar..." class="search-bar">
+        <input type="text" placeholder="Buscar..." class="search-bar"> 
         <div id="search-suggestions" style="display: none;"></div>
       </div>
     </div>
@@ -54,6 +54,25 @@
     <div class="contenedor-productos" id="contenedor-productos">
     </div>
    </div>
+   <div id="product-modal" class="modal-overlay">
+  <div class="modal-content">
+    <span id="close-modal" class="close-button">&times;</span>
+    <div class="modal-body">
+      <div class="modal-image-container">
+        <img id="modal-image" src="" alt="Imagen del producto" class="modal-image">
+      </div>
+      <div class="modal-details">
+        <h2 id="modal-title"></h2>
+        <p id="modal-description"></p>
+        <p class="modal-price" id="modal-price"></p>
+        
+        <div id="modal-options"></div>
+
+        <button id="add-to-cart-modal" class="btn-add-to-cart">Añadir al Carrito</button>
+      </div>
+    </div>
+  </div>
+</div>
 </main>
 </body>
 <script type="module" src="../js/publico.js"></script>

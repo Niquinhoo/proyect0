@@ -1,9 +1,7 @@
-// publico.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-
-import { actualizarContadorCarrito, renderizarCartPreview } from './carrito.js';
+import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+import { agregarProductoAlCarrito, actualizarContadorCarrito, renderizarCartPreview } from './carrito.js';
 
 
 const firebaseConfig = {
@@ -18,11 +16,13 @@ const firebaseConfig = {
 
 
 const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 const db = getFirestore(app);
 const productosCollection = collection(db, 'productos');
 
 
 const getPlaceholderImage = () => './assets/placeholder.png';
+
 
 document.addEventListener("DOMContentLoaded", async () => {
     const contenedorProductos = document.getElementById("contenedor-productos");
@@ -34,35 +34,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     const suggestionsContainer = document.getElementById('search-suggestions');
     const header = document.getElementById("encabezado");
     const menuCategorias = document.getElementById("menu-categorias");
-    
 
     const cartPreviewContainer = document.querySelector('.cart-preview-container');
     const closePreviewBtn = document.getElementById('close-preview');
 
+    // Selectores del Pop-up de Producto
+    const productModal = document.getElementById('product-modal');
+    const closeModalBtn = document.getElementById('close-modal');
+    const modalImage = document.getElementById('modal-image');
+    const modalTitle = document.getElementById('modal-title');
+    const modalDescription = document.getElementById('modal-description');
+    const modalPrice = document.getElementById('modal-price');
+    const modalOptions = document.getElementById('modal-options');
+    const addToCartModalBtn = document.getElementById('add-to-cart-modal');
 
     if (!contenedorProductos) {
         console.error("No se encontró el contenedor con ID 'contenedor-productos'.");
         return;
-    }
-    if (!searchInput) {
-        console.error("No se encontró el input de búsqueda.");
-    }
-    if (!searchButton) {
-        console.warn("Botón de búsqueda no encontrado. Asegúrate de que el selector '#search-button' es correcto.");
-    }
-    if (!suggestionsContainer) {
-        console.error("No se encontró el contenedor de sugerencias con ID 'search-suggestions'.");
-        return;
-    }
-    if (!header) {
-        console.error("No se encontró el header con ID 'encabezado'. El efecto de scroll no funcionará.");
-    }
-    if (!menuCategorias) {
-        console.error("No se encontró el menú de categorías con ID 'menu-categorias'. El efecto de scroll no funcionará.");
-    }
-
-    if (!cartPreviewContainer) {
-        console.error("No se encontró el contenedor del carrito flotante '.cart-preview-container'.");
     }
 
 
@@ -117,6 +105,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         productosARenderizar.forEach(producto => {
             const card = document.createElement("div");
             card.classList.add("producto");
+            // Agregamos el ID del producto como un atributo de datos
+            card.dataset.id = producto.id;
+            
             let imagenPrincipal = getPlaceholderImage();
             let imagenSecundaria = getPlaceholderImage();
             const coloresConImagenes = Object.keys(producto.imagenesPorColor || {}).filter(color =>
@@ -137,7 +128,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const nombre = producto.nombre || "Producto sin nombre";
             const precioMostrado = getDisplayPrice(producto);
             card.innerHTML = `
-                <a href="./productos/producto.html?id=${encodeURIComponent(producto.id)}" class="producto-link">
+                <div class="producto-link">
                     <img src="${imagenPrincipal}"
                          data-front="${imagenPrincipal}"
                          data-back="${imagenSecundaria}"
@@ -146,7 +137,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <h3>${nombre}</h3>
                     <p class="precio">${precioMostrado}</p>
                     <p class="descripcion"></p>
-                </a>
+                </div>
             `;
             contenedorProductos.appendChild(card);
         });
@@ -165,6 +156,139 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
+    // Nueva función para mostrar el pop-up del producto
+    function mostrarPopUpProducto(producto) {
+        modalTitle.textContent = producto.nombre;
+        modalDescription.textContent = producto.descripcion || '';
+        
+        const tallesOrdenados = {
+            sabana: ["1 plaza", "2 plazas", "queen", "king"],
+            acolchado: ["1 plaza", "2 plazas", "queen", "king"],
+            frazada: ["1 plaza", "2 plazas", "queen", "king"],
+            toalla: ["300g", "400g", "500g", "600g"]
+        };
+        
+        let selectedOption = null;
+        let selectedColor = null;
+
+        modalOptions.innerHTML = '';
+        const preciosPorMedida = producto.preciosPorMedida || {};
+        const imagenesPorColor = producto.imagenesPorColor || {};
+        const tieneTalles = tallesOrdenados[producto.tipo] && tallesOrdenados[producto.tipo].some(talle => preciosPorMedida[talle]);
+        const tieneColores = Object.keys(imagenesPorColor).length > 0;
+
+        // Renderiza opciones de talle si existen
+        if (tieneTalles) {
+            const tallesGroup = document.createElement('div');
+            tallesGroup.classList.add('modal-options-group');
+            tallesGroup.innerHTML = '<h4>Selecciona un talle:</h4><div class="option-list"></div>';
+            const tallesList = tallesGroup.querySelector('.option-list');
+            tallesOrdenados[producto.tipo].forEach(talle => {
+                if (preciosPorMedida[talle]) {
+                    const span = document.createElement('span');
+                    span.textContent = talle;
+                    span.dataset.talle = talle;
+                    tallesList.appendChild(span);
+                    span.addEventListener('click', () => {
+                        selectedOption = { tipo: 'talle', valor: talle };
+                        updateSelections(tallesList, span);
+                        updatePrice();
+                    });
+                }
+            });
+            modalOptions.appendChild(tallesGroup);
+        }
+        
+        // Renderiza opciones de color si existen
+        if (tieneColores) {
+            const coloresGroup = document.createElement('div');
+            coloresGroup.classList.add('modal-options-group');
+            coloresGroup.innerHTML = '<h4>Selecciona un color:</h4><div class="option-list"></div>';
+            const coloresList = coloresGroup.querySelector('.option-list');
+            Object.keys(imagenesPorColor).forEach(color => {
+                const colorDiv = document.createElement('div');
+                colorDiv.classList.add('color-option');
+                colorDiv.style.backgroundColor = color;
+                colorDiv.dataset.color = color;
+                coloresList.appendChild(colorDiv);
+                colorDiv.addEventListener('click', () => {
+                    selectedColor = color;
+                    updateSelections(coloresList, colorDiv);
+                    if (imagenesPorColor[color] && imagenesPorColor[color][0]) {
+                        modalImage.src = imagenesPorColor[color][0];
+                    }
+                });
+            });
+            modalOptions.appendChild(coloresGroup);
+        }
+
+        // Función para actualizar la selección visual
+        function updateSelections(container, element) {
+            container.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        // Función para actualizar el precio mostrado
+        function updatePrice() {
+            if (selectedOption && selectedOption.tipo === 'talle') {
+                const precio = preciosPorMedida[selectedOption.valor];
+                modalPrice.textContent = `$${precio.toFixed(2)}`;
+            } else {
+                modalPrice.textContent = getDisplayPrice(producto);
+            }
+        }
+        updatePrice();
+
+        // Establece imagen inicial
+        const primerColor = Object.keys(imagenesPorColor)[0];
+        if (primerColor && imagenesPorColor[primerColor][0]) {
+            modalImage.src = imagenesPorColor[primerColor][0];
+            selectedColor = primerColor;
+            updateSelections(modalOptions.querySelector('.color-option').parentNode, modalOptions.querySelector('.color-option'));
+        }
+
+        // Abre el modal
+        productModal.classList.add('is-active');
+
+        // Lógica para añadir al carrito desde el modal
+        addToCartModalBtn.onclick = () => {
+            let productoAAgregar = { ...producto };
+            if (tieneColores && selectedColor) {
+                productoAAgregar.colorSeleccionado = selectedColor;
+                if (imagenesPorColor[selectedColor][0]) {
+                    productoAAgregar.imagenPrincipal = imagenesPorColor[selectedColor][0];
+                }
+            } else if (imagenesPorColor[primerColor][0]) {
+                productoAAgregar.imagenPrincipal = imagenesPorColor[primerColor][0];
+            }
+            if (tieneTalles && selectedOption) {
+                productoAAgregar.talleSeleccionado = selectedOption.valor;
+                productoAAgregar.precio = preciosPorMedida[selectedOption.valor];
+            } else if (Object.keys(preciosPorMedida).length > 0) {
+                 const minPrecio = Math.min(...Object.values(preciosPorMedida));
+                 const tallePorDefecto = Object.keys(preciosPorMedida).find(key => preciosPorMedida[key] === minPrecio);
+                 productoAAgregar.talleSeleccionado = tallePorDefecto;
+                 productoAAgregar.precio = minPrecio;
+            } else {
+                productoAAgregar.precio = 0;
+            }
+
+            agregarProductoAlCarrito(productoAAgregar, 1);
+            alert(`"${productoAAgregar.nombre}" añadido al carrito.`);
+            productModal.classList.remove('is-active');
+        };
+    }
+
+    // Event Listeners para cerrar el modal
+    closeModalBtn.addEventListener('click', () => {
+        productModal.classList.remove('is-active');
+    });
+
+    productModal.addEventListener('click', (event) => {
+        if (event.target === productModal) {
+            productModal.classList.remove('is-active');
+        }
+    });
 
     try {
         const snapshot = await getDocs(productosCollection);
@@ -182,8 +306,21 @@ document.addEventListener("DOMContentLoaded", async () => {
         contenedorProductos.innerHTML = `<p>Error al cargar los productos: ${error.message}</p>`;
     }
 
+    // Event Listener para abrir el pop-up al hacer clic en un producto
+    contenedorProductos.addEventListener('click', (event) => {
+        const productoCard = event.target.closest('.producto');
+        if (productoCard) {
+            const productId = productoCard.dataset.id;
+            const productoSeleccionado = productos.find(p => p.id === productId);
+            if (productoSeleccionado) {
+                mostrarPopUpProducto(productoSeleccionado);
+            }
+        }
+    });
+
     // --- Tu lógica de búsqueda intacta ---
     function mostrarSugerencias(suggestedProducts) {
+        if (!suggestionsContainer) return;
         suggestionsContainer.innerHTML = '';
         suggestionsContainer.style.display = 'block';
         if (suggestedProducts.length === 0) {
@@ -196,7 +333,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             li.textContent = product.nombre;
             li.dataset.productId = product.id;
             li.addEventListener('click', () => {
-                window.location.href = `./productos/producto.html?id=${encodeURIComponent(product.id)}`;
+                const productoSeleccionado = productos.find(p => p.id === product.id);
+                if (productoSeleccionado) {
+                    mostrarPopUpProducto(productoSeleccionado);
+                }
                 limpiarSugerencias();
             });
             ul.appendChild(li);
@@ -205,11 +345,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function limpiarSugerencias() {
+        if (!suggestionsContainer) return;
         suggestionsContainer.innerHTML = '';
         suggestionsContainer.style.display = 'none';
     }
 
     function buscarProducto() {
+        if (!searchInput) return;
         const searchTerm = searchInput.value.trim().toLowerCase();
         if (searchTerm.length === 0) {
             renderizarProductos(productos);
@@ -233,7 +375,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         });
         if (productoEncontrado) {
-            window.location.href = `./productos/producto.html?id=${encodeURIComponent(productoEncontrado.id)}`;
+            mostrarPopUpProducto(productoEncontrado);
             limpiarSugerencias();
         } else {
             const productosFiltrados = productos.filter(producto =>
@@ -272,7 +414,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-
     let ultimaPosicionScroll = window.scrollY;
     window.addEventListener("scroll", () => {
         const posicionActual = window.scrollY;
@@ -304,44 +445,36 @@ document.addEventListener("DOMContentLoaded", async () => {
         ultimaPosicionScroll = posicionActual;
     });
 
-// --- CÓDIGO DEL CARRITO MEJORADO (AÑADE ESTO) ---
     const cartIconLink = document.querySelector('.cart-icon-link');
     if (cartPreviewContainer && cartIconLink) {
         actualizarContadorCarrito();
 
-        // Lógica de escritorio: El hover sigue funcionando con tus reglas CSS
         cartPreviewContainer.addEventListener('mouseenter', () => {
             renderizarCartPreview();
         });
 
-        // Lógica para todos los dispositivos: Click en el ícono del carrito
         cartIconLink.addEventListener('click', (event) => {
-            // Si la vista previa NO está activa, la abrimos
             if (!cartPreviewContainer.classList.contains('is-active')) {
-                event.preventDefault(); // Previene la redirección del enlace por defecto
+                event.preventDefault();
                 cartPreviewContainer.classList.add('is-active');
                 renderizarCartPreview();
             } else {
                 // Si ya está activa, el próximo clic redirige al href del enlace
-                // No hacemos event.preventDefault() para permitir la acción por defecto
             }
         });
-        
-        // Lógica para cerrar el carrito al hacer clic fuera de él
+
         document.addEventListener('click', (event) => {
             const isClickInsideCart = cartPreviewContainer.contains(event.target);
-            // Cierra el carrito solo si el clic NO fue dentro del contenedor
             if (!isClickInsideCart) {
                 cartPreviewContainer.classList.remove('is-active');
             }
         });
 
-        if(closePreviewBtn) {
+        if (closePreviewBtn) {
             closePreviewBtn.addEventListener('click', (event) => {
                 event.stopPropagation();
                 cartPreviewContainer.classList.remove('is-active');
             });
         }
     }
-    // --- FIN DEL CÓDIGO DEL CARRITO MEJORADO ---
 });

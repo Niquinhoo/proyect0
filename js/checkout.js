@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const telefono = document.getElementById('telefono').value;
 
             // 1. Generar el mensaje de WhatsApp
-            let mensajeWhatsApp = `¡Hola! He realizado un pedido. Aquí están los detalles:\n\n`;
+            let mensajeWhatsApp = `🫡¡Hola! He realizado un pedido. Aquí están los detalles:\n\n`;
             mensajeWhatsApp += `Mis Datos:\n`;
             mensajeWhatsApp += `Nombre: ${nombre} ${apellido}\n`;
             mensajeWhatsApp += `Dirección: ${direccion}\n`;
